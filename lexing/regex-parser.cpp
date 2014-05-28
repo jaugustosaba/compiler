@@ -117,6 +117,20 @@ public:
                 if (m_lexeme == -1) {
                     throw BadRegex("unexpected eof", m_input.tellg());
                 }
+                switch (m_lexeme) {
+                case 'n':
+                	m_lexeme = '\n';
+                	break;
+                case 't':
+                	m_lexeme = '\t';
+                	break;
+                case 'f':
+                	m_lexeme = '\f';
+                	break;
+                case 'r':
+                	m_lexeme = '\r';
+                	break;
+                }
                 m_token = Token::Char;
                 break;
             default:

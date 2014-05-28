@@ -1,25 +1,14 @@
 #include <iostream>
-#include <sstream>
 
 #include "lexing.h"
 
-const static char *INPUT = R"(
-%%
-
-%%
-"a" ~> action0 ;
-"ab*" ~> action1 ;
-)";
-
-
 int main(int argc, char **argv) {
-	std::istringstream input(INPUT);
-
+	auto &input = std::cin;
 	auto &output = std::cout;
 	auto &error = std::cerr;
 
-	output.exceptions(std::ostream::failbit);
-	error.exceptions(std::ostream::failbit);
+	input.exceptions(std::istream::badbit);
+	output.exceptions(std::ostream::badbit);
 	lexing::Lexing lexing;
 	try {
 		lexing.generate(input, output, error);

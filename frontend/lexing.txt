@@ -1,0 +1,14 @@
+%%
+
+%class LexerHelper ;
+
+%namespace frontend ;
+
+%%
+
+"[A-Za-z_]+" ~> id ;
+"\+"        ~> add ;
+"\*"        ~> mul ;
+"\^"        ~> pow ;
+"<"         ~> lt  ;
+"[\n\t ]+"         ;

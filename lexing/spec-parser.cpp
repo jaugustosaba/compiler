@@ -162,8 +162,8 @@ private:
             if (c == '\\') {
                 m_input.next();
                 c = m_input.peek();
-                if (c == -1) {
-                    lexerError("bad escape");
+                if (c != '"') {
+                	str << '\\';
                 }
             }
             str << char(c);
@@ -227,21 +227,23 @@ private:
         int priority = std::numeric_limits<int>::max();
         while (m_lexer.token() != Token::Eof) {
             std::string regex = consume(Token::String);
-            std::string id;
+            std::string action;
             if (m_lexer.token() == Token::Arrow) {
                 m_lexer.next();
-                id = consume(Token::Id);
+                action = consume(Token::Id);
             }
             consume(Token::Semi);
-            pushRule(regex, id, priority--);
+            pushRule(regex, action, priority--);
         }
     }
     void pushRule(const std::string &regex, const std::string &id, int priority) {
         try {
-        	ActionPtr action(new Action);
-        	action->action = id;
-        	action->priority = priority;
-        	Rule rule{parseRegex(regex), std::move(action)};
+			ActionPtr action(new Action);
+			action->name = id;
+			action->priority = priority;
+        	Rule rule;
+        	rule.regex = parseRegex(regex);
+        	rule.action = std::move(action);
         	m_spec.rules.push_back(std::move(rule));
         } catch (const BadRegex &regex) {
         	std::string message(regex.what());

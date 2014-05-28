@@ -158,7 +158,7 @@ private:
         m_out << "template <class Lexer, class Semantic>" << endl;
         m_out << "static typename Semantic::Result parse(Lexer &lexer, Semantic &semantic) const {" << endl;
         m_out.increaseIdent();
-        m_out << "ParserHelper<Lexer, Semantic> helper(lexer, semantic);" << endl;
+        m_out << "Helper<Lexer, Semantic> helper(lexer, semantic);" << endl;
         m_out << "return helper.parse();" << endl;
         m_out.decreaseIdent();
         m_out << "}" << endl << endl;
@@ -183,12 +183,12 @@ private:
     }
     void generateParserInstance() {
         m_out << "template <class Lexer, class Semantic>" << endl;
-        m_out << "struct ParserHelper {" << endl;
+        m_out << "struct Helper {" << endl;
         m_out.increaseIdent();
         m_out << "typedef typename Semantic::Result Result;" << endl;
         m_out << "typedef typename Lexer::Token Token;" << endl;
         m_out << "typedef std::pair<size_t, Result> Reduction;" << endl << endl;
-        m_out << "ParserHelper(Lexer &lexer, Semantic &semantic)" << endl;
+        m_out << "Helper(Lexer &lexer, Semantic &semantic)" << endl;
         m_out.increaseIdent();
         m_out << ": m_lexer(lexer), m_semantic(semantic), m_stack({ State(0) })" << endl;
         m_out.decreaseIdent();

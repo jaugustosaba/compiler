@@ -99,9 +99,12 @@ private:
     }
     void generateActionHelper(const DfaState *state) {
         if (state->isFinal) {
-            if (state->action != nullptr) {
-                out << "return m_semantic." << state->action->action << "(m_lexeme.str());" << endl;
+            if ((state->action != nullptr) && (!state->action->name.empty())) {
+                out << "return m_semantic." << state->action->name << "(m_lexeme.str());" << endl;
                 return;
+            } else {
+            	out << "state = " << dfa.root->id << ";" << endl;
+            	out << "break;" << endl;
             }
         }
         out << "throw LexError();" << endl;

@@ -8,7 +8,7 @@ namespace lexing {
 
 struct Action {
 	int          priority;
-	std::string  action;
+	std::string  name;
 };
 
 typedef std::shared_ptr<Action> ActionPtr;
