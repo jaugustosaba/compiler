@@ -3,6 +3,7 @@
 
 #include <stack>
 #include <memory>
+#include <utility>
 #include <stdexcept>
 
 namespace frontend {
@@ -69,7 +70,7 @@ struct ParserHelper {
     };
 
     template <class Lexer, class Semantic>
-    static typename Semantic::Result parse(Lexer &lexer, Semantic &semantic) const {
+    static typename Semantic::Result parse(Lexer &lexer, Semantic &semantic) {
         Helper<Lexer, Semantic> helper(lexer, semantic);
         return helper.parse();
     }
@@ -90,7 +91,7 @@ private:
     template <class Lexer, class Semantic>
     struct Helper {
         typedef typename Semantic::Result Result;
-        typedef typename Lexer::Token Token;
+        typedef decltype(std::declval<Lexer>().peekAsToken()) Token;
         typedef std::pair<size_t, Result> Reduction;
 
         Helper(Lexer &lexer, Semantic &semantic)
@@ -166,13 +167,13 @@ private:
                     auto s3 = m_stack.top().symbol; m_stack.pop();
                     auto s2 = m_stack.top().symbol; m_stack.pop();
                     auto s1 = m_stack.top().symbol; m_stack.pop();
-                    return Reduction(0, m_semantic.compare(s1, s2, s3));
+                    return Reduction(0, m_semantic.power(s1, s2, s3));
                 }
                 case 4: {
                     auto s3 = m_stack.top().symbol; m_stack.pop();
                     auto s2 = m_stack.top().symbol; m_stack.pop();
                     auto s1 = m_stack.top().symbol; m_stack.pop();
-                    return Reduction(0, m_semantic.power(s1, s2, s3));
+                    return Reduction(0, m_semantic.compare(s1, s2, s3));
                 }
             }
             throw std::logic_error("bad reduction");
@@ -183,15 +184,15 @@ private:
         const static Action ACTION[11][6] = {
             {{ ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Shift, 1 }},
             {{ ActionType::Reduce, 0 }, { ActionType::Reduce, 0 }, { ActionType::Reduce, 0 }, { ActionType::Reduce, 0 }, { ActionType::Reduce, 0 }, { ActionType::Error, 0 }},
-            {{ ActionType::Accept, 0 }, { ActionType::Shift, 6 }, { ActionType::Shift, 3 }, { ActionType::Shift, 4 }, { ActionType::Shift, 5 }, { ActionType::Error, 0 }},
+            {{ ActionType::Accept, 0 }, { ActionType::Shift, 5 }, { ActionType::Shift, 6 }, { ActionType::Shift, 3 }, { ActionType::Shift, 4 }, { ActionType::Error, 0 }},
             {{ ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Shift, 1 }},
             {{ ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Shift, 1 }},
             {{ ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Shift, 1 }},
             {{ ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Error, 0 }, { ActionType::Shift, 1 }},
-            {{ ActionType::Reduce, 1 }, { ActionType::Reduce, 1 }, { ActionType::Reduce, 1 }, { ActionType::Shift, 4 }, { ActionType::Shift, 5 }, { ActionType::Error, 0 }},
-            {{ ActionType::Reduce, 2 }, { ActionType::Reduce, 2 }, { ActionType::Reduce, 2 }, { ActionType::Reduce, 2 }, { ActionType::Shift, 5 }, { ActionType::Error, 0 }},
-            {{ ActionType::Reduce, 3 }, { ActionType::Error, 0 }, { ActionType::Shift, 3 }, { ActionType::Shift, 4 }, { ActionType::Shift, 5 }, { ActionType::Error, 0 }},
-            {{ ActionType::Reduce, 4 }, { ActionType::Reduce, 4 }, { ActionType::Reduce, 4 }, { ActionType::Reduce, 4 }, { ActionType::Shift, 5 }, { ActionType::Error, 0 }}
+            {{ ActionType::Reduce, 1 }, { ActionType::Reduce, 1 }, { ActionType::Reduce, 1 }, { ActionType::Shift, 3 }, { ActionType::Shift, 4 }, { ActionType::Error, 0 }},
+            {{ ActionType::Reduce, 2 }, { ActionType::Reduce, 2 }, { ActionType::Reduce, 2 }, { ActionType::Reduce, 2 }, { ActionType::Shift, 4 }, { ActionType::Error, 0 }},
+            {{ ActionType::Reduce, 3 }, { ActionType::Reduce, 3 }, { ActionType::Reduce, 3 }, { ActionType::Reduce, 3 }, { ActionType::Shift, 4 }, { ActionType::Error, 0 }},
+            {{ ActionType::Reduce, 4 }, { ActionType::Error, 0 }, { ActionType::Shift, 6 }, { ActionType::Shift, 3 }, { ActionType::Shift, 4 }, { ActionType::Error, 0 }}
         };
         return ACTION[state][static_cast<size_t>(lookahead)];
     }
@@ -200,10 +201,10 @@ private:
             {2},
             {0},
             {0},
-            {7},
             {8},
-            {10},
             {9},
+            {10},
+            {7},
             {0},
             {0},
             {0},

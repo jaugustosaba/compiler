@@ -67,7 +67,7 @@ private:
     }
     void generateLexFunc() {
         out << "template <class Input, class Semantic>" << endl;
-        out << "static typename Semantic::Result lex(Input& input, Semantic& semantic) {" << endl;
+        out << "static bool lex(Input& input, Semantic& semantic) {" << endl;
         out.increaseIdent();
         out << "Helper<Input, Semantic> helper(input, semantic);" << endl;
         out << "return helper.lex();" << endl;
@@ -84,7 +84,6 @@ private:
         out.decreaseIdent();
         out << "public:" << endl;
         out.increaseIdent();
-        out << "typedef typename Semantic::Result Result;" << endl << endl;
         out << "Helper(Input& input, Semantic& semantic)" << endl;
         out.increaseIdent();
         out << ": m_input(input), m_semantic(semantic), m_lexeme()" << endl;
@@ -100,23 +99,24 @@ private:
     void generateActionHelper(const DfaState *state) {
         if (state->isFinal) {
             if ((state->action != nullptr) && (!state->action->name.empty())) {
-                out << "return m_semantic." << state->action->name << "(m_lexeme.str());" << endl;
+                out << "m_semantic." << state->action->name << "(m_lexeme.str());" << endl;
+                out << "return true;" << endl;
                 return;
             } else {
-            	out << "state = " << dfa.root->id << ";" << endl;
-            	out << "break;" << endl;
+            	out << "return false;" << endl;
+            	return;
             }
         }
         out << "throw LexError();" << endl;
     }
     void generateHelperLex() {
-        out << "Result lex() {" << endl;
+        out << "bool lex() {" << endl;
         out.increaseIdent();
         out << "m_lexeme.str(\"\");" << endl;
         out << "int c = peek();" << endl;
         out << "if (c == -1) {" << endl;
         out.increaseIdent();
-        out << "return Result();" << endl;
+        out << "return false;" << endl;
         out.decreaseIdent();
         out << "}" << endl;
         out << "size_t state = " << dfa.root->id << ";" << endl;
@@ -147,8 +147,8 @@ private:
                 out.decreaseIdent();
                 out.decreaseIdent();
                 out << "}" << endl;
+                out << "break;" << endl;
             }
-            out << "break;" << endl;
             out.decreaseIdent();
         }
         out.decreaseIdent();

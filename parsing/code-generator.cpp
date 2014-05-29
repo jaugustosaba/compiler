@@ -35,6 +35,7 @@ public:
     	m_out << "#define " << guard << endl << endl;
     	m_out << "#include <stack>" << endl;
     	m_out << "#include <memory>" << endl;
+    	m_out << "#include <utility>" << endl;
     	m_out << "#include <stdexcept>" << endl << endl;
     	if (!nameSpace.empty()) {
     		m_out << "namespace " << nameSpace << " {" << endl << endl;
@@ -156,7 +157,7 @@ private:
     }
     void generateParseFun() {
         m_out << "template <class Lexer, class Semantic>" << endl;
-        m_out << "static typename Semantic::Result parse(Lexer &lexer, Semantic &semantic) const {" << endl;
+        m_out << "static typename Semantic::Result parse(Lexer &lexer, Semantic &semantic) {" << endl;
         m_out.increaseIdent();
         m_out << "Helper<Lexer, Semantic> helper(lexer, semantic);" << endl;
         m_out << "return helper.parse();" << endl;
@@ -186,7 +187,7 @@ private:
         m_out << "struct Helper {" << endl;
         m_out.increaseIdent();
         m_out << "typedef typename Semantic::Result Result;" << endl;
-        m_out << "typedef typename Lexer::Token Token;" << endl;
+        m_out << "typedef decltype(std::declval<Lexer>().peekAsToken()) Token;" << endl;
         m_out << "typedef std::pair<size_t, Result> Reduction;" << endl << endl;
         m_out << "Helper(Lexer &lexer, Semantic &semantic)" << endl;
         m_out.increaseIdent();
