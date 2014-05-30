@@ -3,7 +3,7 @@
 %class ParserHelper;
 %namespace frontend ;
 
-%token MODULE PROCEDURE BEGIN END TYPE RECORD VAR COLON ID EQ SEMI;
+%token MODULE PROCEDURE BEGIN END TYPE RECORD VAR COLON ID EQ SEMI COMMA;
 %root module;
 
 %%
@@ -29,8 +29,13 @@ vardecls :
 |	vardecl vardecls ~> {handleAppendVarDecl}
 ;
 
+identlist :
+	ID                  ~> {handleSingleIdent}
+|	identlist COMMA ID  ~> {handleAppendIdent}
+;
+
 vardecl :
-	ID COLON ID SEMI ~> {handleVarDecl}
+	identlist COLON ID SEMI ~> {handleVarDecl}
 ; 
 
 types :

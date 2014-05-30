@@ -11,7 +11,7 @@ module m;
       end ;
 
   var
-    a : integer;
+    a, k, l : integer;
     b : real;
 
   procedure x;

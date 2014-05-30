@@ -1,9 +1,9 @@
 #ifndef AST_H_
 #define AST_H_
 
-#include <ostream>
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "lexer.h"
 
@@ -43,16 +43,25 @@ struct Type : public Node {
 	}
 };
 
+struct IdentList : public Node {
+	std::vector<TokenPtr> idents;
+
+	inline IdentList() : idents() {
+	}
+};
+
+typedef std::shared_ptr<IdentList> IdentListPtr;
+
 struct Variable;
 typedef std::shared_ptr<Variable> VariablePtr;
 
 struct Variable : public Node {
-	TokenPtr     name;
-	TokenPtr     type;
-	VariablePtr  next;
+	IdentListPtr  idents;
+	TokenPtr      type;
+	VariablePtr   next;
 
-	inline Variable(const TokenPtr &name, const TokenPtr &type)
-		: name(name), type(type), next()
+	inline Variable(const IdentListPtr &idents, const TokenPtr &type)
+		: idents(idents), type(type), next()
 	{
 	}
 };

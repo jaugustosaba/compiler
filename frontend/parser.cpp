@@ -104,7 +104,24 @@ struct Semantic {
 	Result handleVarDecl(const Symbol &ID0, const Symbol &COLON,
 			const Symbol &ID1, const Symbol &SEMI)
 	{
-		return NodePtr(new Variable(ID0.token(), ID1.token()));
+		auto ids = std::dynamic_pointer_cast<IdentList>(ID0.result());
+		return NodePtr(new Variable(ids, ID1.token()));
+	}
+
+	inline
+	Result handleSingleIdent(const Symbol &ID) {
+		IdentListPtr ptr(new IdentList());
+		ptr->idents.push_back(ID.token());
+		return ptr;
+	}
+
+	inline
+	Result handleAppendIdent(
+			const Symbol &identlist, const Symbol &COMMA, const Symbol &ID)
+	{
+		auto idlist = std::dynamic_pointer_cast<IdentList>(identlist.result());
+		idlist->idents.push_back(ID.token());
+		return idlist;
 	}
 };
 

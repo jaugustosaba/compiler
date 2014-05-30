@@ -43,6 +43,9 @@ struct Semantic {
 	inline void var(const std::string &lexeme) {
 		result = newToken(TokenType::VAR, lexeme);
 	}
+	inline void comma(const std::string &lexeme) {
+		result = newToken(TokenType::COMMA, lexeme);
+	}
 private:
 	inline TokenPtr newToken(TokenType type, const std::string &lexeme) {
 		TokenPtr ptr(new Token(type, lexeme, start, input.position()));

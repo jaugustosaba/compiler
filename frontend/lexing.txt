@@ -9,6 +9,7 @@
 "=" ~> eq ;
 ";" ~> semi ;
 ":" ~> colon ;
+"," ~> comma ;
 "module" ~> module ;
 "procedure" ~> procedure;
 "begin" ~> begin ;
