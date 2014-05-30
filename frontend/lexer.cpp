@@ -10,20 +10,38 @@ struct Semantic {
 	TokenPtr  result;
 	Position  start;
 
+	inline void procedure(const std::string &lexeme) {
+		result = newToken(TokenType::PROCEDURE, lexeme);
+	}
+	inline void module(const std::string &lexeme) {
+		result = newToken(TokenType::MODULE, lexeme);
+	}
+	inline void begin(const std::string &lexeme) {
+		result = newToken(TokenType::BEGIN, lexeme);
+	}
+	inline void end(const std::string &lexeme) {
+		result = newToken(TokenType::END, lexeme);
+	}
 	inline void id(const std::string &lexeme) {
 		result = newToken(TokenType::ID, lexeme);
 	}
-	inline void add(const std::string &lexeme) {
-		result = newToken(TokenType::PLUS, lexeme);
+	inline void semi(const std::string &lexeme) {
+		result = newToken(TokenType::SEMI, lexeme);
 	}
-	inline void mul(const std::string &lexeme) {
-		result = newToken(TokenType::TIMES, lexeme);
+	inline void type(const std::string &lexeme) {
+		result = newToken(TokenType::TYPE, lexeme);
 	}
-	inline void pow(const std::string &lexeme) {
-		result = newToken(TokenType::POW, lexeme);
+	inline void record(const std::string &lexeme) {
+		result = newToken(TokenType::RECORD, lexeme);
 	}
-	inline void lt(const std::string &lexeme) {
-		result = newToken(TokenType::LT, lexeme);
+	inline void eq(const std::string &lexeme) {
+		result = newToken(TokenType::EQ, lexeme);
+	}
+	inline void colon(const std::string &lexeme) {
+		result = newToken(TokenType::COLON, lexeme);
+	}
+	inline void var(const std::string &lexeme) {
+		result = newToken(TokenType::VAR, lexeme);
 	}
 private:
 	inline TokenPtr newToken(TokenType type, const std::string &lexeme) {

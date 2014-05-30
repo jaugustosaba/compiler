@@ -16,7 +16,7 @@ bool Lexing::generate(std::istream &input, std::ostream &output, std::ostream &e
 	} catch (BadSpec &e) {
 		error
 			<< "syntax error: " << e.what() << " at ("
-			<< e.line() << ", " << e.column() << ")";
+			<< e.line() << ", " << e.column() << ")" << std::endl;
 	}
 	return false;
 }

@@ -7,7 +7,7 @@
 
 namespace frontend {
 
-ExprPtr parse(std::istream &input);
+NodePtr parse(std::istream &input);
 
 }
 

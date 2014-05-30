@@ -6,9 +6,15 @@
 
 %%
 
-"[A-Za-z_]+" ~> id ;
-"\+"        ~> add ;
-"\*"        ~> mul ;
-"\^"        ~> pow ;
-"<"         ~> lt  ;
-"[\n\t ]+"         ;
+"=" ~> eq ;
+";" ~> semi ;
+":" ~> colon ;
+"module" ~> module ;
+"procedure" ~> procedure;
+"begin" ~> begin ;
+"end" ~> end ;
+"type" ~> type ;
+"var" ~> var ;
+"record" ~> record ;
+"[A-Za-z_][A-Za-z0-9_]*" ~> id ; 
+"[\n\t ]+" ;

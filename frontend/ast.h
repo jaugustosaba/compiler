@@ -5,49 +5,107 @@
 #include <string>
 #include <memory>
 
+#include "lexer.h"
+
 namespace frontend {
 
-struct Expr {
-	virtual void print(std::ostream &out) const = 0;
-	virtual ~Expr() {
+struct Node {
+	virtual ~Node() {
 	}
 };
 
-typedef std::shared_ptr<Expr> ExprPtr;
+typedef std::shared_ptr<Node> NodePtr;
 
-struct IdExpr : public Expr {
-	std::string id;
+struct Procedure;
+typedef std::shared_ptr<Procedure> ProcedurePtr;
 
-	inline IdExpr(const std::string &id)
-		: id(id)
+struct TypeDescriptor : public Node {
+};
+
+typedef std::shared_ptr<TypeDescriptor> TypeDescriptorPtr;
+
+struct RecordDescriptor : public TypeDescriptor {
+};
+
+typedef std::shared_ptr<RecordDescriptor> RecordDescriptorPtr;
+
+struct Type;
+typedef std::shared_ptr<Type> TypePtr;
+
+struct Type : public Node {
+	TokenPtr            id;
+	TypeDescriptorPtr   descriptor;
+	TypePtr             next;
+
+	inline Type(const TokenPtr &id, const TypeDescriptorPtr &descriptor)
+		: id(id), descriptor(descriptor), next()
 	{
 	}
-	void print(std::ostream &out) const override;
 };
 
-enum class BinOp {
-	Add,
-	Mul,
-	Pow,
-	Lt,
-};
+struct Variable;
+typedef std::shared_ptr<Variable> VariablePtr;
 
-struct BinExpr : public Expr {
-	BinOp    op;
-	ExprPtr  left;
-	ExprPtr  right;
+struct Variable : public Node {
+	TokenPtr     name;
+	TokenPtr     type;
+	VariablePtr  next;
 
-	inline BinExpr(BinOp op, const ExprPtr &left, const ExprPtr &right)
-		: op(op), left(left), right(right)
+	inline Variable(const TokenPtr &name, const TokenPtr &type)
+		: name(name), type(type), next()
 	{
 	}
-	void print(std::ostream &out) const override;
 };
 
-inline std::ostream& operator<<(std::ostream &out, const ExprPtr &expr) {
-	expr->print(out);
-	return out;
-}
+struct Declarations : public Node {
+	TypePtr  firstType;
+	VariablePtr         firstVariable;
+	ProcedurePtr        firstProcedure;
+
+	inline Declarations(
+			const TypePtr &firstType,
+			const VariablePtr &firstVariable,
+			const ProcedurePtr &firstProcedure
+		)
+		: firstType(firstType),
+		  firstVariable(firstVariable),
+		  firstProcedure(firstProcedure)
+	{
+	}
+};
+
+typedef std::shared_ptr<Declarations> DeclarationsPtr;
+
+struct Module : public Node {
+	TokenPtr         id0;
+	DeclarationsPtr  decls;
+	TokenPtr         id1;
+
+	inline Module(
+			const TokenPtr &id0,
+			const DeclarationsPtr &decls,
+			const TokenPtr &id1
+		)
+		: id0(id0), decls(decls), id1(id1)
+	{
+	}
+};
+
+struct Procedure : public Node {
+	TokenPtr         id0;
+	DeclarationsPtr  decls;
+	TokenPtr         id1;
+	ProcedurePtr     next;
+
+	inline Procedure(
+			const TokenPtr &id0,
+			const DeclarationsPtr &decls,
+			const TokenPtr &id1
+		)
+		: id0(id0), decls(decls), id1(id1), next()
+	{
+	}
+};
 
 } // namespace frontend
 

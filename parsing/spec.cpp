@@ -18,6 +18,9 @@ bool computeFirstSet(Production* production) {
 			}
 		}
 	}
+	if (empty) {
+		production->firstSet.insert(nullptr);
+	}
 	return production->firstSet.size() > n;
 }
 
@@ -55,7 +58,7 @@ void Spec::computeLastTokens() {
 				continue;
 			}
 			auto &symbols = prod->symbols;
-			for (auto i=symbols.size()-1; i >= 0; --i) {
+			for (int i=symbols.size()-1; i >= 0; --i) {
 				auto token = dynamic_cast<Token*>(symbols[i]);
 				if (token != nullptr) {
 					prod->lastToken = token;

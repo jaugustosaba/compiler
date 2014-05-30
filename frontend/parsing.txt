@@ -3,22 +3,64 @@
 %class ParserHelper;
 %namespace frontend ;
 
-%nonassoc LT;
-
-%left PLUS;
-%left TIMES;
-
-%right POW;
-
-%token ID;
-
-%root expr;
+%token MODULE PROCEDURE BEGIN END TYPE RECORD VAR COLON ID EQ SEMI;
+%root module;
 
 %%
 
-expr : expr PLUS expr  ~> {add}
-     | expr TIMES expr ~> {times}
-     | expr POW expr   ~> {power}
-     | expr LT expr    ~> {compare}
-     | ID              ~> {id}
+module :
+	MODULE ID SEMI
+		decls
+		optStmts
+	END ID SEMI ~> {handleModule}
+;
+
+decls :
+	types
+	vars
+	procdecls ~> {handleDecls}
+;
+
+vars :
+|	VAR vardecls ~> {handleVars}
+;
+
+vardecls :
+|	vardecl vardecls ~> {handleAppendVarDecl}
+;
+
+vardecl :
+	ID COLON ID SEMI ~> {handleVarDecl}
+; 
+
+types :
+|	TYPE typedecls ~> {handleTypes}
+;
+
+typedecls :
+|	typedecl typedecls  ~> {handleAppendTypeDecl}
+;
+
+typedecl : ID EQ typedesc SEMI ~> {handleTypeDecl}
+;
+
+typedesc :
+	RECORD
+	END    ~> {handleRecord}
+;
+
+optStmts :
+| 	BEGIN
+;
+
+procdecls :
+	                   ~> {handleEmptyProcDecls}
+|	procdecl procdecls ~> {handleAppendProcDecl}
+;
+
+procdecl :
+	PROCEDURE ID SEMI
+		decls
+	BEGIN
+	END ID SEMI ~> {handleProcedure}
 ;

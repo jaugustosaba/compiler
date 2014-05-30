@@ -92,7 +92,7 @@ bool Parsing::generate(std::istream &input, std::ostream &output, std::ostream &
 	} catch (SpecError &e) {
 		error
 			<< "error parsing spec: '" << e.what() << "'"
-			<< "at (" << e.line() << ", " << e.column() << ")";
+			<< " at (" << e.line() << ", " << e.column() << ")" << std::endl;
 		return false;
 	}
 	return true;
