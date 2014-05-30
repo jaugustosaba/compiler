@@ -24,8 +24,10 @@ struct Dfa {
 	std::vector<DfaStatePtr> states;
 
 	inline DfaState* createState() {
-		DfaStatePtr ptr(new DfaState);
-		ptr->id = states.size();
+		DfaStatePtr ptr(new DfaState{
+			states.size(),
+			false
+		});
 		auto p = ptr.get();
 		states.push_back(std::move(ptr));
 		return p;

@@ -155,6 +155,7 @@ private:
         out << "}" << endl;
         out.decreaseIdent();
         out << "}" << endl;
+        out << "throw std::logic_error(\"unexpect code\");" << endl;
         out.decreaseIdent();
         out << "}" << endl;
     }

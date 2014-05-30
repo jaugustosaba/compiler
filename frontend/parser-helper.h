@@ -120,6 +120,7 @@ private:
                         throw SyntaxError();
                 }
             }
+            throw std::logic_error("unexpected code");
         }
 
     private:

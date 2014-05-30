@@ -266,6 +266,7 @@ private:
         m_out << "}" << endl;
         m_out.decreaseIdent();
         m_out << "}" << endl;
+        m_out << "throw std::logic_error(\"unexpected code\");" << endl;
         m_out.decreaseIdent();
         m_out << "}" << endl << endl;
     }
