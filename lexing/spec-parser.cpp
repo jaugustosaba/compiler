@@ -236,11 +236,12 @@ private:
             pushRule(regex, action, priority--);
         }
     }
-    void pushRule(const std::string &regex, const std::string &id, int priority) {
+    void pushRule(const std::string &regex, const std::string &actionName, int priority) {
         try {
-			ActionPtr action(new Action);
-			action->name = id;
-			action->priority = priority;
+			ActionPtr action(new Action{
+				priority,
+				actionName
+			});
         	Rule rule;
         	rule.regex = parseRegex(regex);
         	rule.action = std::move(action);

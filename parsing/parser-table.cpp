@@ -100,17 +100,24 @@ ParserTable makeTable(const Spec &spec, const LALR &lalr) {
                 			action = Action{ActionType::Error, 0};
                 			break;
                 		}
-                		SRConflictPtr ptr(new SRConflict);
-                		ptr->kernel = &kernel;
-                		ptr->state = state.get();
-                		ptr->token = token;
-                		ptr->veredict = veredict;
+                		SRConflictPtr ptr(new SRConflict{
+                			state.get(),
+                			&kernel,
+                			token,
+                			veredict
+                		});
                 		rs.srConflicts.push_back(std::move(ptr));
                 		break;
                 	}
                 	case ActionType::Reduce:
                 	case ActionType::Accept: {
-                		RRConflictPtr ptr(new RRConflict);
+                		RRConflictPtr ptr(new RRConflict{
+                			state.get(),
+                			nullptr,
+                			&kernel,
+                			token,
+                			RRVeredict::First
+                		});
                 		auto rule = rs.reductions[action.value].rule;
                 		for (const auto &pair : state->items) {
                 			const auto &kernel = pair.first;
@@ -122,10 +129,6 @@ ParserTable makeTable(const Spec &spec, const LALR &lalr) {
                 				break;
                 			}
                 		}
-                		ptr->second = &kernel;
-                		ptr->state = state.get();
-                		ptr->token = token;
-                		ptr->veredict = RRVeredict::First;
                 		rs.rrConflicts.push_back(std::move(ptr));
                 		break;
                 	}

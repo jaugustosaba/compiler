@@ -31,8 +31,10 @@ struct Ndfa {
 	std::vector<NdfaStatePtr> states;
 
 	inline NdfaState* createState() {
-		NdfaStatePtr ptr(new NdfaState);
-		ptr->id = states.size();
+		NdfaStatePtr ptr(new NdfaState{
+			states.size(),
+			false
+		});
 		auto p = ptr.get();
 		states.push_back(std::move(ptr));
 		return p;

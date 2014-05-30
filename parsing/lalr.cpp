@@ -106,7 +106,7 @@ struct LALRBuilder {
 				continue;
 			}
 			Symbol *symbol = kernel.production->symbols[kernel.position];
-			Kernel newKernel = { kernel.production, kernel.position+1 };
+			Kernel newKernel{ kernel.production, kernel.position+1 };
 			State* nextState;
 			auto it = rs.find(symbol);
 			if (it == rs.end()) {

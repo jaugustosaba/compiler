@@ -113,11 +113,12 @@ public:
         return m_type;
     }
     TkPtr peekAsToken() const {
-    	TkPtr ptr(new Tk);
-    	ptr->tokenType = m_type;
-    	ptr->lexeme = m_lexeme;
-    	ptr->line = m_line;
-    	ptr->column = m_column;
+    	TkPtr ptr(new Tk{
+    		m_type,
+    		m_lexeme,
+    		m_line,
+    		m_column
+    	});
     	return std::move(ptr);
     }
     inline
@@ -268,8 +269,9 @@ private:
         }
     }
     void parseOption() {
-    	RawOptionPtr option(new RawOption);
-    	option->name = consumeAsToken(TokenType::Option);
+    	RawOptionPtr option(new RawOption{
+    		consumeAsToken(TokenType::Option)
+    	});
         do {
         	option->params.push_back(consumeAsToken(TokenType::Id));
         } while (m_lexer.peek() != TokenType::Semi);
@@ -277,8 +279,9 @@ private:
         m_rawSpec.options.push_back(std::move(option));
     }
     void parseRule() {
-    	RawRulePtr rule(new RawRule);
-    	rule->name = consumeAsToken(TokenType::Id);
+    	RawRulePtr rule(new RawRule{
+    		consumeAsToken(TokenType::Id)
+    	});
         consume(TokenType::Colon);
         parseProductions(rule);
         consume(TokenType::Semi);
@@ -292,7 +295,7 @@ private:
         }
     }
     void parseProduction(const RawRulePtr &rule) {
-    	RawProductionPtr production(new RawProduction);
+    	RawProductionPtr production(new RawProduction{});
         while (m_lexer.peek() == TokenType::Id) {
         	production->symbols.push_back(m_lexer.peekAsToken());
             m_lexer.next();
@@ -423,8 +426,8 @@ private:
         	TokenPtr ptr(new Token);
         	ptr->id = m_spec.tokens.size();
         	ptr->name = tk->lexeme;
-        	ptr->assoc = assoc;
         	ptr->priority = priority;
+        	ptr->assoc = assoc;
         	m_symbolMap[TkPtr(new Tk(*tk))] = ptr.get();
         	m_spec.tokens.push_back(std::move(ptr));
         }
@@ -455,7 +458,7 @@ private:
                 out << " at (" << l << ", " << c << ")";
                 throw SpecError(out.str(), name->line, name->column);
             }
-            RulePtr ptr(new Rule);
+            RulePtr ptr(new Rule{});
             ptr->id = m_spec.rules.size();
             ptr->name = name->lexeme;
             m_symbolMap[TkPtr(new Tk(*name))] = ptr.get();
@@ -469,7 +472,7 @@ private:
     	auto it1 = m_symbolMap.find(rule->name);
     	auto specRule = dynamic_cast<Rule*>(it1->second);
         for (const auto &prod : rule->productions) {
-        	ProductionPtr specProd(new Production);
+        	ProductionPtr specProd(new Production{});
         	specProd->rule = specRule;
             for (const auto &symbol : prod->symbols) {
                 auto it2 = m_symbolMap.find(symbol);
@@ -509,7 +512,7 @@ private:
 };
 
 void createEofToken(Spec &spec) {
-	TokenPtr ptr(new Token);
+	TokenPtr ptr(new Token{});
 	ptr->id = 0;
 	ptr->name = "Eof";
 	ptr->priority = 0;
