@@ -3,7 +3,9 @@
 %class ParserHelper;
 %namespace frontend ;
 
-%token MODULE PROCEDURE BEGIN END TYPE RECORD VAR COLON ID EQ SEMI COMMA;
+%token	MODULE PROCEDURE FUNCTION BEGIN END TYPE RECORD VAR
+		IF ELSEIF THEN ELSE WHILE DO COLON ID EQ SEMI COMMA
+		LPAREN RPAREN ;
 %root module;
 
 %%
@@ -30,9 +32,12 @@ vardecls :
 ;
 
 identlist :
-	ID                  ~> {handleSingleIdent}
-|	identlist COMMA ID  ~> {handleAppendIdent}
+	ID identlisttail ~> {handleIdentList}  
 ;
+
+identlisttail:
+|	COMMA ID identlisttail ~> {handleAppendIdent}
+; 
 
 vardecl :
 	identlist COLON ID SEMI ~> {handleVarDecl}
@@ -51,11 +56,20 @@ typedecl : ID EQ typedesc SEMI ~> {handleTypeDecl}
 
 typedesc :
 	RECORD
+		fields
 	END    ~> {handleRecord}
 ;
 
+fields :
+|	field fields ~> {handleAppendField}
+;
+
+field :
+	identlist COLON ID SEMI ~> {handleField}
+;
+
 optStmts :
-| 	BEGIN
+| 	BEGIN stmts ~> {handleOptStmt}
 ;
 
 procdecls :
@@ -64,8 +78,59 @@ procdecls :
 ;
 
 procdecl :
-	PROCEDURE ID SEMI
+	PROCEDURE ID fparams SEMI
 		decls
 	BEGIN
+		stmts
 	END ID SEMI ~> {handleProcedure}
+|
+	FUNCTION ID fparams COLON ID SEMI
+		decls
+	BEGIN
+		stmts
+	END ID SEMI ~> {handleFunction}
+;
+
+fparams :
+|	LPAREN RPAREN
+|	LPAREN fparam fparamlist RPAREN ~> {handleFParams}
+;
+
+fparamlist :
+|	SEMI fparam fparamlist ~> {handleAppendFParam}
+;
+
+fparam :
+	VAR identlist COLON ID  ~> {handleVarFParam}
+|	identlist COLON ID      ~> {handleFParam}
+;
+
+stmts:
+| 	stmt SEMI stmts ~> {handleAppendStmt}
+;
+
+stmt:
+	IF expr THEN
+		stmts
+	elseifs
+	optElse
+	END ~> {handleIfStmt}
+|	WHILE expr DO
+		stmts
+	END ~> {handleWhile}
+;
+
+elseifs:
+|	elseif elseifs ~> {handleAppendElseif}
+;
+
+elseif:
+	ELSEIF expr THEN stmts ~> {handleElseif}
+;
+
+optElse:
+|	ELSE stmts ~> {handleOptElse}
+;
+
+expr:
 ;

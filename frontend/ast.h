@@ -16,6 +16,19 @@ struct Node {
 
 typedef std::shared_ptr<Node> NodePtr;
 
+struct Ident;
+typedef std::shared_ptr<Ident> IdentPtr;
+
+struct Ident : public Node {
+	TokenPtr  id;
+	IdentPtr  next;
+
+	inline Ident(const TokenPtr &id)
+		: id(id), next()
+	{
+	}
+};
+
 struct Procedure;
 typedef std::shared_ptr<Procedure> ProcedurePtr;
 
@@ -24,7 +37,31 @@ struct TypeDescriptor : public Node {
 
 typedef std::shared_ptr<TypeDescriptor> TypeDescriptorPtr;
 
+struct Field;
+
+typedef std::shared_ptr<Field> FieldPtr;
+
+struct Field : public Node {
+	IdentPtr  firstIdent;
+	TokenPtr  type;
+	FieldPtr  next;
+
+	inline Field(
+			const IdentPtr &firstIdent,
+			const TokenPtr &type
+		)
+		: firstIdent(firstIdent), type(type), next()
+	{
+	}
+};
+
 struct RecordDescriptor : public TypeDescriptor {
+	FieldPtr firstField;
+
+	inline RecordDescriptor(const FieldPtr &firstField)
+		: firstField(firstField)
+	{
+	}
 };
 
 typedef std::shared_ptr<RecordDescriptor> RecordDescriptorPtr;
@@ -43,25 +80,16 @@ struct Type : public Node {
 	}
 };
 
-struct IdentList : public Node {
-	std::vector<TokenPtr> idents;
-
-	inline IdentList() : idents() {
-	}
-};
-
-typedef std::shared_ptr<IdentList> IdentListPtr;
-
 struct Variable;
 typedef std::shared_ptr<Variable> VariablePtr;
 
 struct Variable : public Node {
-	IdentListPtr  idents;
-	TokenPtr      type;
-	VariablePtr   next;
+	IdentPtr     firstIdent;
+	TokenPtr     type;
+	VariablePtr  next;
 
-	inline Variable(const IdentListPtr &idents, const TokenPtr &type)
-		: idents(idents), type(type), next()
+	inline Variable(const IdentPtr &firstIdent, const TokenPtr &type)
+		: firstIdent(firstIdent), type(type), next()
 	{
 	}
 };
@@ -85,6 +113,67 @@ struct Declarations : public Node {
 
 typedef std::shared_ptr<Declarations> DeclarationsPtr;
 
+struct Expr : public Node {
+};
+
+typedef std::shared_ptr<Expr> ExprPtr;
+
+struct Stmt;
+typedef std::shared_ptr<Stmt> StmtPtr;
+
+struct Stmt : public Node {
+	StmtPtr next;
+
+	inline Stmt() : next() {
+	}
+};
+
+struct Elseif;
+typedef std::shared_ptr<Elseif> ElseifPtr;
+
+struct Elseif : public Node {
+	ExprPtr    expr;
+	StmtPtr    firstStmt;
+	ElseifPtr  next;
+
+	inline Elseif(
+			const ExprPtr &expr,
+			const StmtPtr &firstStmt
+		) : expr(expr), firstStmt(firstStmt), next()
+	{
+	}
+};
+
+struct IfStmt : public Stmt {
+	ExprPtr    expr;
+	StmtPtr    firstStmt;
+	ElseifPtr  firstElseif;
+	StmtPtr    firstElseStmt;
+
+	inline IfStmt(
+			const ExprPtr &expr,
+			const StmtPtr &firstStmt,
+			const ElseifPtr &firstElseif,
+			const StmtPtr &firstElseStmt
+		) : Stmt(),
+			expr(expr),
+			firstStmt(firstStmt),
+			firstElseif(firstElseif),
+			firstElseStmt(firstElseStmt)
+	{
+	}
+};
+
+struct WhileStmt : public Stmt {
+	ExprPtr  expr;
+	StmtPtr  firstStmt;
+
+	inline WhileStmt(const ExprPtr &expr, const StmtPtr &firstStmt)
+		: Stmt(), expr(expr), firstStmt(firstStmt)
+	{
+	}
+};
+
 struct Module : public Node {
 	TokenPtr         id0;
 	DeclarationsPtr  decls;
@@ -93,25 +182,65 @@ struct Module : public Node {
 	inline Module(
 			const TokenPtr &id0,
 			const DeclarationsPtr &decls,
-			const TokenPtr &id1
-		)
+			const TokenPtr &id1)
 		: id0(id0), decls(decls), id1(id1)
+	{
+	}
+};
+
+struct FParam;
+
+typedef std::shared_ptr<FParam> FParamPtr;
+
+struct FParam : public Node {
+	bool          isVar;
+	IdentPtr      firstIdent;
+	TokenPtr      type;
+	FParamPtr     next;
+
+	inline FParam(
+			bool isVar,
+			const IdentPtr &firstIdent,
+			const TokenPtr &type)
+		: isVar(isVar), firstIdent(firstIdent), type(type)
 	{
 	}
 };
 
 struct Procedure : public Node {
 	TokenPtr         id0;
+	FParamPtr        firstFParam;
 	DeclarationsPtr  decls;
+	StmtPtr          firstStmt;
 	TokenPtr         id1;
 	ProcedurePtr     next;
 
 	inline Procedure(
 			const TokenPtr &id0,
+			const FParamPtr &firstFParam,
 			const DeclarationsPtr &decls,
+			const StmtPtr &firstStmt,
 			const TokenPtr &id1
 		)
-		: id0(id0), decls(decls), id1(id1), next()
+		: id0(id0), decls(decls), firstStmt(firstStmt),
+		  id1(id1), next()
+	{
+	}
+};
+
+struct Function : public Procedure {
+	TokenPtr resultType;
+
+	inline Function(
+			const TokenPtr &id0,
+			const FParamPtr &firstFParam,
+			const TokenPtr &resultType,
+			const DeclarationsPtr &decls,
+			const StmtPtr &firstStmt,
+			const TokenPtr &id1
+		)
+		: Procedure(id0, firstFParam, decls, firstStmt, id1),
+		  resultType(resultType)
 	{
 	}
 };

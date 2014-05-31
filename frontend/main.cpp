@@ -8,19 +8,36 @@ module m;
   type
     zica = 
       record
+        a, b : boolean;
+        c : integer;
       end ;
 
   var
     a, k, l : integer;
     b : real;
 
-  procedure x;
+  procedure x();
   begin
+    if then
+    elseif then
+      if then
+      end;
+    elseif then
+      while do
+      end;
+    else
+    end;
   end x;
 
-  procedure y;
+  function y(a, b : integer; var c:integer) : integer;
   begin
   end y;
+
+begin
+  if then
+    while do
+    end;
+  end;
 end m;
 )";
 

@@ -13,6 +13,9 @@ struct Semantic {
 	inline void procedure(const std::string &lexeme) {
 		result = newToken(TokenType::PROCEDURE, lexeme);
 	}
+	inline void function(const std::string &lexeme) {
+		result = newToken(TokenType::FUNCTION, lexeme);
+	}
 	inline void module(const std::string &lexeme) {
 		result = newToken(TokenType::MODULE, lexeme);
 	}
@@ -45,6 +48,30 @@ struct Semantic {
 	}
 	inline void comma(const std::string &lexeme) {
 		result = newToken(TokenType::COMMA, lexeme);
+	}
+	inline void lparen(const std::string &lexeme) {
+		result = newToken(TokenType::LPAREN, lexeme);
+	}
+	inline void rparen(const std::string &lexeme) {
+		result = newToken(TokenType::RPAREN, lexeme);
+	}
+	inline void iff(const std::string &lexeme) {
+		result = newToken(TokenType::IF, lexeme);
+	}
+	inline void elsee(const std::string &lexeme) {
+		result = newToken(TokenType::ELSE, lexeme);
+	}
+	inline void elseif(const std::string &lexeme) {
+		result = newToken(TokenType::ELSEIF, lexeme);
+	}
+	inline void then(const std::string &lexeme) {
+		result = newToken(TokenType::THEN, lexeme);
+	}
+	inline void whilee(const std::string &lexeme) {
+		result = newToken(TokenType::WHILE, lexeme);
+	}
+	inline void doo(const std::string &lexeme) {
+		result = newToken(TokenType::DO, lexeme);
 	}
 private:
 	inline TokenPtr newToken(TokenType type, const std::string &lexeme) {
