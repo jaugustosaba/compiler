@@ -103,6 +103,11 @@ struct Type : public Node {
 	}
 };
 
+struct Expr : public Node {
+};
+
+typedef std::shared_ptr<Expr> ExprPtr;
+
 struct Variable;
 typedef std::shared_ptr<Variable> VariablePtr;
 
@@ -117,17 +122,36 @@ struct Variable : public Node {
 	}
 };
 
+struct Constant;
+typedef std::shared_ptr<Constant> ConstantPtr;
+
+struct Constant : public Node {
+	TokenPtr     id;
+	ExprPtr      expr;
+	ConstantPtr  next;
+
+	inline Constant(
+			const TokenPtr &id,
+			const ExprPtr &expr)
+		: id(id), expr(expr)
+	{
+	}
+};
+
 struct Declarations : public Node {
+	ConstantPtr   firstConstant;
 	TypePtr       firstType;
 	VariablePtr   firstVariable;
 	ProcedurePtr  firstProcedure;
 
 	inline Declarations(
+			const ConstantPtr &firstConstant,
 			const TypePtr &firstType,
 			const VariablePtr &firstVariable,
 			const ProcedurePtr &firstProcedure
 		)
-		: firstType(firstType),
+		: firstConstant(firstConstant),
+		  firstType(firstType),
 		  firstVariable(firstVariable),
 		  firstProcedure(firstProcedure)
 	{
@@ -135,11 +159,6 @@ struct Declarations : public Node {
 };
 
 typedef std::shared_ptr<Declarations> DeclarationsPtr;
-
-struct Expr : public Node {
-};
-
-typedef std::shared_ptr<Expr> ExprPtr;
 
 struct IntExpr : public Expr {
 	TokenPtr value;

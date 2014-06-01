@@ -23,14 +23,16 @@ struct Semantic {
 
 	inline
 	Result handleDecls(
+			const Symbol &consts,
 			const Symbol &types,
 			const Symbol &vars,
 			const Symbol &procdecls)
 	{
+		auto firstconst = std::dynamic_pointer_cast<Constant>(consts.result());
 		auto firsttype = std::dynamic_pointer_cast<Type>(types.result());
 		auto firstvar = std::dynamic_pointer_cast<Variable>(vars.result());
 		auto firstproc = std::dynamic_pointer_cast<Procedure>(procdecls.result());
-		return NodePtr(new Declarations(firsttype, firstvar, firstproc));
+		return NodePtr(new Declarations(firstconst, firsttype, firstvar, firstproc));
 	}
 
 	inline
@@ -452,6 +454,28 @@ struct Semantic {
 		auto lvalue = std::dynamic_pointer_cast<Expr>(expr.result());
 		auto firstExpr = std::dynamic_pointer_cast<ExprList>(exprlist.result());
 		return NodePtr(new IndexExpr(lvalue, firstExpr));
+	}
+
+	inline
+	Result handleConsts(const Symbol &CONST, const Symbol &constlist) {
+		return constlist.result();
+	}
+
+	inline
+	Result handleAppendConst(const Symbol &constt, const Symbol &constlist) {
+		auto first = std::dynamic_pointer_cast<Constant>(constt.result());
+		auto second = std::dynamic_pointer_cast<Constant>(constlist.result());
+		first->next = second;
+		return first;
+	}
+
+	inline
+	Result handleConst(
+			const Symbol &ID, const Symbol &EQ,
+			const Symbol &expr, const Symbol &SEMI)
+	{
+		auto expr0 = std::dynamic_pointer_cast<Expr>(expr.result());
+		return NodePtr(new Constant(ID.token(), expr0));
 	}
 };
 

@@ -6,7 +6,7 @@
 %token	MODULE PROCEDURE FUNCTION BEGIN END TYPE RECORD VAR
 		IF ELSEIF THEN ELSE WHILE DO COLON ID SEMI COMMA
 		LPAREN RPAREN NOT ASSIGN INTLIT POINTER TO ARRAY OF
-		DEREF LSQUARE RSQUARE;
+		DEREF LSQUARE RSQUARE CONST;
 
 %nonassoc EQ NE LT LE GT GE ;
 
@@ -26,9 +26,22 @@ module :
 ;
 
 decls :
+	consts
 	types
 	vars
 	procdecls ~> {handleDecls}
+;
+
+consts :
+|	CONST constlist ~> {handleConsts}
+;
+
+constlist :
+|	const constlist ~> {handleAppendConst}
+;
+
+const :
+	ID EQ expr SEMI ~> {handleConst}
 ;
 
 vars :

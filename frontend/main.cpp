@@ -5,6 +5,9 @@
 
 const char* INPUT = R"(
 module m;
+  const
+    X = 10;
+    Y = X + 1;
   type
     zica = 
       record
