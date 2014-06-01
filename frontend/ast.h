@@ -64,6 +64,29 @@ struct RecordDescriptor : public TypeDescriptor {
 	}
 };
 
+struct ExprList;
+typedef std::shared_ptr<ExprList> ExprListPtr;
+
+struct ArrayDescriptor : public TypeDescriptor {
+	ExprListPtr firstExpr;
+	TokenPtr    type;
+
+	inline ArrayDescriptor(
+			const ExprListPtr &firstExpr,
+			const TokenPtr &type)
+		: firstExpr(firstExpr), type(type)
+	{
+	}
+
+};
+
+struct PointerDescriptor : public TypeDescriptor {
+	TokenPtr type;
+
+	inline PointerDescriptor(const TokenPtr &type) : type(type) {
+	}
+};
+
 typedef std::shared_ptr<RecordDescriptor> RecordDescriptorPtr;
 
 struct Type;
@@ -95,9 +118,9 @@ struct Variable : public Node {
 };
 
 struct Declarations : public Node {
-	TypePtr  firstType;
-	VariablePtr         firstVariable;
-	ProcedurePtr        firstProcedure;
+	TypePtr       firstType;
+	VariablePtr   firstVariable;
+	ProcedurePtr  firstProcedure;
 
 	inline Declarations(
 			const TypePtr &firstType,
@@ -117,6 +140,14 @@ struct Expr : public Node {
 };
 
 typedef std::shared_ptr<Expr> ExprPtr;
+
+struct IntExpr : public Expr {
+	TokenPtr value;
+
+	inline
+	IntExpr(const TokenPtr &value) : value(value) {
+	}
+};
 
 enum class BinOp {
 	EQ,
@@ -186,25 +217,39 @@ struct FieldExpr : public Expr {
 	}
 };
 
-struct AParam;
-typedef std::shared_ptr<AParam> AParamPtr;
+struct ExprList : public Node {
+	ExprPtr      expr;
+	ExprListPtr  tail;
 
-struct AParam : public Node {
-	ExprPtr    expr;
-	AParamPtr  next;
-
-	inline AParam(const ExprPtr &expr)
+	inline ExprList(const ExprPtr &expr)
 		: expr(expr)
 	{
 	}
 };
 
 struct CallExpr : public Expr {
-	ExprPtr    lvalue;
-	AParamPtr  firstAParam;
+	ExprPtr      lvalue;
+	ExprListPtr  firstExpr;
 
-	inline CallExpr(const ExprPtr &lvalue, const AParamPtr &firstAParam)
-		: lvalue(lvalue), firstAParam(firstAParam)
+	inline CallExpr(const ExprPtr &lvalue, const ExprListPtr &firstExpr)
+		: lvalue(lvalue), firstExpr(firstExpr)
+	{
+	}
+};
+
+struct DerefExpr : public Expr {
+	ExprPtr lvalue;
+
+	inline DerefExpr(const ExprPtr &lvalue) : lvalue(lvalue) {
+	}
+};
+
+struct IndexExpr : public Expr {
+	ExprPtr      lvalue;
+	ExprListPtr  firstExpr;
+
+	inline IndexExpr(const ExprPtr &lvalue, const ExprListPtr &firstExpr)
+		: lvalue(lvalue), firstExpr(firstExpr)
 	{
 	}
 };

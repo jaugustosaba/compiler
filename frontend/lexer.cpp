@@ -121,6 +121,30 @@ struct Semantic {
 	inline void assign(const std::string &lexeme) {
 		result = newToken(TokenType::ASSIGN, lexeme);
 	}
+	inline void intlit(const std::string &lexeme) {
+		result = newToken(TokenType::INTLIT, lexeme);
+	}
+	inline void pointer(const std::string &lexeme) {
+		result = newToken(TokenType::POINTER, lexeme);
+	}
+	inline void to(const std::string &lexeme) {
+		result = newToken(TokenType::TO, lexeme);
+	}
+	inline void array(const std::string &lexeme) {
+		result = newToken(TokenType::ARRAY, lexeme);
+	}
+	inline void of(const std::string &lexeme) {
+		result = newToken(TokenType::OF, lexeme);
+	}
+	inline void deref(const std::string &lexeme) {
+		result = newToken(TokenType::DEREF, lexeme);
+	}
+	inline void lsquare(const std::string &lexeme) {
+		result = newToken(TokenType::LSQUARE, lexeme);
+	}
+	inline void rsquare(const std::string &lexeme) {
+		result = newToken(TokenType::RSQUARE, lexeme);
+	}
 private:
 	inline TokenPtr newToken(TokenType type, const std::string &lexeme) {
 		TokenPtr ptr(new Token(type, lexeme, start, input.position()));

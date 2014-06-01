@@ -365,6 +365,11 @@ struct Semantic {
 	}
 
 	inline
+	Result handleIntExpr(const Symbol &INTLIT) {
+		return NodePtr(new IntExpr(INTLIT.token()));
+	}
+
+	inline
 	Result handleIdExpr(const Symbol &ID) {
 		return NodePtr(new IdExpr(ID.token()));
 	}
@@ -387,36 +392,66 @@ struct Semantic {
 	inline
 	Result handleCallExpr(const Symbol &expr, const Symbol &aparams) {
 		auto lvalue = std::dynamic_pointer_cast<Expr>(expr.result());
-		auto fistAParam = std::dynamic_pointer_cast<AParam>(aparams.result());
+		auto fistAParam = std::dynamic_pointer_cast<ExprList>(aparams.result());
 		return NodePtr(new CallExpr(lvalue, fistAParam));
 	}
 
 	inline
-	Result handleAParam(
-			const Symbol &LPAREN, const Symbol &aparamlist, const Symbol &RPAREN)
+	Result handleAParams(
+			const Symbol &LPAREN, const Symbol &exprlist, const Symbol &RPAREN)
 	{
-		return aparamlist.result();
+		return exprlist.result();
 	}
 
 	inline
-	Result handleFirstAParam(const Symbol &expr, const Symbol &aparamlisttail) {
-		return appendAParam(expr, aparamlisttail);
+	Result handleFirstExpr(const Symbol &expr, const Symbol &aparamlisttail) {
+		return appendExpr(expr, aparamlisttail);
 	}
 
 	inline
-	Result handleAppendAParam(
-			const Symbol &COMMA, const Symbol &expr, const Symbol &aparamlisttail)
+	Result handleAppendExpr(
+			const Symbol &COMMA, const Symbol &expr, const Symbol &exprlisttail)
 	{
-		return appendAParam(expr, aparamlisttail);
+		return appendExpr(expr, exprlisttail);
 	}
 
 	inline
-	Result appendAParam(const Symbol &expr, const Symbol &aparamlist) {
+	Result appendExpr(const Symbol &expr, const Symbol &exprlist) {
 		auto expr1 = std::dynamic_pointer_cast<Expr>(expr.result());
-		AParamPtr first(new AParam(expr1));
-		auto second = std::dynamic_pointer_cast<AParam>(aparamlist.result());
-		first->next = second;
+		ExprListPtr first(new ExprList(expr1));
+		auto second = std::dynamic_pointer_cast<ExprList>(exprlist.result());
+		first->tail = second;
 		return first;
+	}
+
+	inline
+	Result handlePointer(const Symbol &POINTER, const Symbol &TO, const Symbol &ID) {
+		return NodePtr(new PointerDescriptor(ID.token()));
+	}
+
+	inline
+	Result handleArray(
+			const Symbol &ARRAY, const Symbol &exprlist,
+			const Symbol &OF, const Symbol &ID)
+	{
+		auto exprs = std::dynamic_pointer_cast<ExprList>(exprlist.result());
+		return NodePtr(new ArrayDescriptor(exprs, ID.token()));
+	}
+
+	inline
+	Result handleDerefExpr(const Symbol &expr, const Symbol &DEREF) {
+		auto lvalue = std::dynamic_pointer_cast<Expr>(expr.result());
+		return NodePtr(new DerefExpr(lvalue));
+	}
+
+	inline
+	Result handleIndexExpr(
+			const Symbol &expr, const Symbol &LSQUARE,
+			const Symbol &exprlist, const Symbol &RSQUARE)
+	{
+		auto lvalue = std::dynamic_pointer_cast<Expr>(expr.result());
+		auto firstExpr = std::dynamic_pointer_cast<ExprList>(exprlist.result());
+		return NodePtr(new IndexExpr(lvalue, firstExpr));
 	}
 };
 

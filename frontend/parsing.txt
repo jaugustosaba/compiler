@@ -5,7 +5,8 @@
 
 %token	MODULE PROCEDURE FUNCTION BEGIN END TYPE RECORD VAR
 		IF ELSEIF THEN ELSE WHILE DO COLON ID SEMI COMMA
-		LPAREN RPAREN NOT ASSIGN;
+		LPAREN RPAREN NOT ASSIGN INTLIT POINTER TO ARRAY OF
+		DEREF LSQUARE RSQUARE;
 
 %nonassoc EQ NE LT LE GT GE ;
 
@@ -65,6 +66,8 @@ typedesc :
 	RECORD
 		fields
 	END    ~> {handleRecord}
+| 	ARRAY exprlist OF ID ~> {handleArray}
+|	POINTER TO ID ~> {handlePointer}
 ;
 
 fields :
@@ -163,17 +166,21 @@ expr:
 |	LPAREN expr RPAREN ~> {handleSubExpr}
 |	expr DOT ID ~> {handleFieldExpr}
 |	expr aparams ~> {handleCallExpr}
+|	expr DEREF ~> {handleDerefExpr}
+|	expr LSQUARE exprlist RSQUARE ~> {handleIndexExpr}
+|	INTLIT ~> {handleIntExpr}
 |	ID ~> {handleIdExpr}
 ;
 
 aparams:
-	LPAREN aparamlist RPAREN ~> {handleAParam}
+	LPAREN RPAREN
+|	LPAREN exprlist RPAREN ~> {handleAParams}
 ;
 
-aparamlist:
-|	expr aparamlisttail ~> {handleFirstAParam}
+exprlist:
+	expr exprlisttail ~> {handleFirstExpr}
 ;
 
-aparamlisttail:
-|	COMMA expr aparamlisttail ~> {handleAppendAParam} 
+exprlisttail:
+|	COMMA expr exprlisttail ~> {handleAppendExpr} 
 ;

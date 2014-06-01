@@ -17,6 +17,9 @@
 "/" ~> realdiv;
 "\(" ~> lparen ;
 "\)" ~> rparen ;
+"\^" ~> deref;
+"\[" ~> lsquare;
+"\]" ~> rsquare;
 "<" ~> lt;
 ">" ~> gt;
 "<=" ~> le;
@@ -42,5 +45,10 @@
 "or" ~> orr;
 "and" ~> andd;
 "not" ~> nott;
+"pointer" ~> pointer;
+"to" ~> to;
+"array" ~> array;
+"of" ~> of;
+"[1-9][0-9]*" ~> intlit;
 "[A-Za-z_][A-Za-z0-9_]*" ~> id ; 
 "[\n\t ]+" ;

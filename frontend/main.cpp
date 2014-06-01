@@ -11,6 +11,8 @@ module m;
         a, b : boolean;
         c : integer;
       end ;
+    pzica = pointer to zica;
+    azica = array 10, 20 of pzica;
 
   var
     a, k, l : integer;
@@ -33,8 +35,12 @@ module m;
     var k : integer;
   begin
     k := a + b + c;
+    y := 20;
     y;
     l := m() + n.k.l();
+    while k().x do
+      k[i, j] = a[l][m]^.value;
+    end;
   end y;
 
 begin
