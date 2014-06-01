@@ -118,6 +118,9 @@ struct Semantic {
 	inline void nott(const std::string &lexeme) {
 		result = newToken(TokenType::NOT, lexeme);
 	}
+	inline void assign(const std::string &lexeme) {
+		result = newToken(TokenType::ASSIGN, lexeme);
+	}
 private:
 	inline TokenPtr newToken(TokenType type, const std::string &lexeme) {
 		TokenPtr ptr(new Token(type, lexeme, start, input.position()));

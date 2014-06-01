@@ -5,7 +5,7 @@
 
 %token	MODULE PROCEDURE FUNCTION BEGIN END TYPE RECORD VAR
 		IF ELSEIF THEN ELSE WHILE DO COLON ID SEMI COMMA
-		LPAREN RPAREN NOT ;
+		LPAREN RPAREN NOT ASSIGN;
 
 %nonassoc EQ NE LT LE GT GE ;
 
@@ -125,6 +125,11 @@ stmt:
 |	WHILE expr DO
 		stmts
 	END ~> {handleWhile}
+|	expr optassign ~> {handleCallOrAssignStmt}
+;
+
+optassign:
+|	ASSIGN expr ~> {handleAssignStmt}
 ;
 
 elseifs:
@@ -157,5 +162,18 @@ expr:
 |	NOT expr ~> {handleNot}
 |	LPAREN expr RPAREN ~> {handleSubExpr}
 |	expr DOT ID ~> {handleFieldExpr}
+|	expr aparams ~> {handleCallExpr}
 |	ID ~> {handleIdExpr}
+;
+
+aparams:
+	LPAREN aparamlist RPAREN ~> {handleAParam}
+;
+
+aparamlist:
+|	expr aparamlisttail ~> {handleFirstAParam}
+;
+
+aparamlisttail:
+|	COMMA expr aparamlisttail ~> {handleAppendAParam} 
 ;

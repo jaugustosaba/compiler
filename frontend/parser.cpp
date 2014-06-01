@@ -368,6 +368,56 @@ struct Semantic {
 	Result handleIdExpr(const Symbol &ID) {
 		return NodePtr(new IdExpr(ID.token()));
 	}
+
+	inline
+	Result handleAssignStmt(const Symbol &ASSIGN, const Symbol &expr) {
+		return expr.result();
+	}
+
+	inline
+	Result handleCallOrAssignStmt(const Symbol &expr, const Symbol &optassign) {
+		auto lvalue = std::dynamic_pointer_cast<Expr>(expr.result());
+		auto rvalue = std::dynamic_pointer_cast<Expr>(optassign.result());
+		if (rvalue.get() == nullptr) {
+			return NodePtr(new CallStmt(lvalue));
+		}
+		return NodePtr(new AssignStmt(lvalue, rvalue));
+	}
+
+	inline
+	Result handleCallExpr(const Symbol &expr, const Symbol &aparams) {
+		auto lvalue = std::dynamic_pointer_cast<Expr>(expr.result());
+		auto fistAParam = std::dynamic_pointer_cast<AParam>(aparams.result());
+		return NodePtr(new CallExpr(lvalue, fistAParam));
+	}
+
+	inline
+	Result handleAParam(
+			const Symbol &LPAREN, const Symbol &aparamlist, const Symbol &RPAREN)
+	{
+		return aparamlist.result();
+	}
+
+	inline
+	Result handleFirstAParam(const Symbol &expr, const Symbol &aparamlisttail) {
+		return appendAParam(expr, aparamlisttail);
+	}
+
+	inline
+	Result handleAppendAParam(
+			const Symbol &COMMA, const Symbol &expr, const Symbol &aparamlisttail)
+	{
+		return appendAParam(expr, aparamlisttail);
+	}
+
+	inline
+	Result appendAParam(const Symbol &expr, const Symbol &aparamlist) {
+		auto expr1 = std::dynamic_pointer_cast<Expr>(expr.result());
+		AParamPtr first(new AParam(expr1));
+		auto second = std::dynamic_pointer_cast<AParam>(aparamlist.result());
+		first->next = second;
+		return first;
+	}
 };
 
 } // anonymous namespace

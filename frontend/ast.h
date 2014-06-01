@@ -186,6 +186,29 @@ struct FieldExpr : public Expr {
 	}
 };
 
+struct AParam;
+typedef std::shared_ptr<AParam> AParamPtr;
+
+struct AParam : public Node {
+	ExprPtr    expr;
+	AParamPtr  next;
+
+	inline AParam(const ExprPtr &expr)
+		: expr(expr)
+	{
+	}
+};
+
+struct CallExpr : public Expr {
+	ExprPtr    lvalue;
+	AParamPtr  firstAParam;
+
+	inline CallExpr(const ExprPtr &lvalue, const AParamPtr &firstAParam)
+		: lvalue(lvalue), firstAParam(firstAParam)
+	{
+	}
+};
+
 struct Stmt;
 typedef std::shared_ptr<Stmt> StmtPtr;
 
@@ -238,6 +261,27 @@ struct WhileStmt : public Stmt {
 
 	inline WhileStmt(const ExprPtr &expr, const StmtPtr &firstStmt)
 		: Stmt(), expr(expr), firstStmt(firstStmt)
+	{
+	}
+};
+
+struct CallStmt : public Stmt {
+	ExprPtr  expr;
+
+	inline CallStmt(const ExprPtr &expr)
+		: expr(expr)
+	{
+	}
+};
+
+struct AssignStmt : public Stmt {
+	ExprPtr  lvalue;
+	ExprPtr  rvalue;
+
+	inline AssignStmt(
+			const ExprPtr &lvalue,
+			const ExprPtr &rvalue)
+		: lvalue(lvalue), rvalue(rvalue)
 	{
 	}
 };

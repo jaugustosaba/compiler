@@ -30,7 +30,11 @@ module m;
   end x;
 
   function y(a, b : integer; var c:integer) : integer;
+    var k : integer;
   begin
+    k := a + b + c;
+    y;
+    l := m() + n.k.l();
   end y;
 
 begin

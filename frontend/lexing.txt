@@ -22,6 +22,7 @@
 "<=" ~> le;
 ">=" ~> ge;
 "<>" ~> ne;
+":=" ~> assign;
 "module" ~> module ;
 "procedure" ~> procedure;
 "function" ~> function;
