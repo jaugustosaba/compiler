@@ -42,8 +42,8 @@ struct Semantic {
 	Result handleAppendProcDecl(
 		const Symbol &procdecl, const Symbol &procdecls)
 	{
-		auto first = std::dynamic_pointer_cast<Procedure>(procdecls.result());
-		auto second = std::dynamic_pointer_cast<Procedure>(procdecl.result());
+		auto first = std::dynamic_pointer_cast<Procedure>(procdecl.result());
+		auto second = std::dynamic_pointer_cast<Procedure>(procdecls.result());
 		first->next = second;
 		return first;
 	}
@@ -263,6 +263,110 @@ struct Semantic {
 		auto expr1 = std::dynamic_pointer_cast<Expr>(expr.result());
 		auto firstStmt = std::dynamic_pointer_cast<Stmt>(stmts.result());
 		return NodePtr(new WhileStmt(expr1, firstStmt));
+	}
+
+	inline
+	Result handleEq(const Symbol &expr0, const Symbol &EQ, const Symbol &expr1) {
+		return makeBinaryExpr(BinOp::EQ, expr0, expr1);
+	}
+
+	inline
+	Result handleNe(const Symbol &expr0, const Symbol &NE, const Symbol &expr1) {
+		return makeBinaryExpr(BinOp::NE, expr0, expr1);
+	}
+
+	inline
+	Result handleLt(const Symbol &expr0, const Symbol &LT, const Symbol &expr1) {
+		return makeBinaryExpr(BinOp::LT, expr0, expr1);
+	}
+
+	inline
+	Result handleLe(const Symbol &expr0, const Symbol &LE, const Symbol &expr1) {
+		return makeBinaryExpr(BinOp::LE, expr0, expr1);
+	}
+
+	inline
+	Result handleGt(const Symbol &expr0, const Symbol &GT, const Symbol &expr1) {
+		return makeBinaryExpr(BinOp::GT, expr0, expr1);
+	}
+
+	inline
+	Result handleGe(const Symbol &expr0, const Symbol &GE, const Symbol &expr1) {
+		return makeBinaryExpr(BinOp::GE, expr0, expr1);
+	}
+
+	inline
+	Result handleAdd(const Symbol &expr0, const Symbol &ADD, const Symbol &expr1) {
+		return makeBinaryExpr(BinOp::Add, expr0, expr1);
+	}
+
+	inline
+	Result handleSub(const Symbol &expr0, const Symbol &SUB, const Symbol &expr1) {
+		return makeBinaryExpr(BinOp::Sub, expr0, expr1);
+	}
+
+	inline
+	Result handleMul(const Symbol &expr0, const Symbol &MUL, const Symbol &expr1) {
+		return makeBinaryExpr(BinOp::Mul, expr0, expr1);
+	}
+
+	inline
+	Result handleRealDiv(const Symbol &expr0, const Symbol &REALDIV, const Symbol &expr1) {
+		return makeBinaryExpr(BinOp::RealDiv, expr0, expr1);
+	}
+
+	inline
+	Result handleDiv(const Symbol &expr0, const Symbol &DIV, const Symbol &expr1) {
+		return makeBinaryExpr(BinOp::Div, expr0, expr1);
+	}
+
+	inline
+	Result handleMod(const Symbol &expr0, const Symbol &MOD, const Symbol &expr1) {
+		return makeBinaryExpr(BinOp::Mod, expr0, expr1);
+	}
+
+	inline
+	Result handleAnd(const Symbol &expr0, const Symbol &AND, const Symbol &expr1) {
+		return makeBinaryExpr(BinOp::And, expr0, expr1);
+	}
+
+	inline
+	Result handleOr(const Symbol &expr0, const Symbol &OR, const Symbol &expr1) {
+		return makeBinaryExpr(BinOp::Or, expr0, expr1);
+	}
+
+	inline
+	Result makeBinaryExpr(BinOp op, const Symbol &expr0, const Symbol &expr1) {
+		auto left = std::dynamic_pointer_cast<Expr>(expr0.result());
+		auto right = std::dynamic_pointer_cast<Expr>(expr1.result());
+		return NodePtr(new BinExpr(op, left, right));
+	}
+
+	inline
+	Result handleNot(const Symbol &NOT, const Symbol &expr) {
+		return makeUnaryExpr(UnOp::Not, expr);
+	}
+
+	inline
+	Result makeUnaryExpr(UnOp op, const Symbol &expr) {
+		auto expr1 = std::dynamic_pointer_cast<Expr>(expr.result());
+		return NodePtr(new UnExpr(op, expr1));
+	}
+
+	inline
+	Result handleSubExpr(const Symbol &LPAREN, const Symbol &expr, const Symbol &RPAREN) {
+		return expr.result();
+	}
+
+	inline
+	Result handleFieldExpr(const Symbol &expr, const Symbol &DOT, const Symbol &ID) {
+		auto expr1 = std::dynamic_pointer_cast<Expr>(expr.result());
+		return NodePtr(new FieldExpr(expr1, ID.token()));
+	}
+
+	inline
+	Result handleIdExpr(const Symbol &ID) {
+		return NodePtr(new IdExpr(ID.token()));
 	}
 };
 

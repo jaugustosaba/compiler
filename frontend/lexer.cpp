@@ -40,6 +40,21 @@ struct Semantic {
 	inline void eq(const std::string &lexeme) {
 		result = newToken(TokenType::EQ, lexeme);
 	}
+	inline void ne(const std::string &lexeme) {
+		result = newToken(TokenType::NE, lexeme);
+	}
+	inline void lt(const std::string &lexeme) {
+		result = newToken(TokenType::LT, lexeme);
+	}
+	inline void le(const std::string &lexeme) {
+		result = newToken(TokenType::LE, lexeme);
+	}
+	inline void gt(const std::string &lexeme) {
+		result = newToken(TokenType::GT, lexeme);
+	}
+	inline void ge(const std::string &lexeme) {
+		result = newToken(TokenType::GE, lexeme);
+	}
 	inline void colon(const std::string &lexeme) {
 		result = newToken(TokenType::COLON, lexeme);
 	}
@@ -72,6 +87,36 @@ struct Semantic {
 	}
 	inline void doo(const std::string &lexeme) {
 		result = newToken(TokenType::DO, lexeme);
+	}
+	inline void add(const std::string &lexeme) {
+		result = newToken(TokenType::ADD, lexeme);
+	}
+	inline void sub(const std::string &lexeme) {
+		result = newToken(TokenType::SUB, lexeme);
+	}
+	inline void mul(const std::string &lexeme) {
+		result = newToken(TokenType::MUL, lexeme);
+	}
+	inline void realdiv(const std::string &lexeme) {
+		result = newToken(TokenType::REALDIV, lexeme);
+	}
+	inline void div(const std::string &lexeme) {
+		result = newToken(TokenType::DIV, lexeme);
+	}
+	inline void mod(const std::string &lexeme) {
+		result = newToken(TokenType::MOD, lexeme);
+	}
+	inline void orr(const std::string &lexeme) {
+		result = newToken(TokenType::OR, lexeme);
+	}
+	inline void andd(const std::string &lexeme) {
+		result = newToken(TokenType::AND, lexeme);
+	}
+	inline void dot(const std::string &lexeme) {
+		result = newToken(TokenType::DOT, lexeme);
+	}
+	inline void nott(const std::string &lexeme) {
+		result = newToken(TokenType::NOT, lexeme);
 	}
 private:
 	inline TokenPtr newToken(TokenType type, const std::string &lexeme) {

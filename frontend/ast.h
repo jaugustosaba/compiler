@@ -118,6 +118,74 @@ struct Expr : public Node {
 
 typedef std::shared_ptr<Expr> ExprPtr;
 
+enum class BinOp {
+	EQ,
+	NE,
+	LT,
+	LE,
+	GT,
+	GE,
+	Add,
+	Sub,
+	Mul,
+	RealDiv,
+	Div,
+	Mod,
+	And,
+	Or
+};
+
+struct BinExpr : public Expr {
+	BinOp    op;
+	ExprPtr  left;
+	ExprPtr  right;
+
+	inline BinExpr(
+			BinOp op,
+			const ExprPtr &left,
+			const ExprPtr &right)
+		: op(op), left(left), right(right)
+	{
+	}
+};
+
+enum class UnOp {
+	Not,
+};
+
+struct UnExpr : public Expr {
+	UnOp     op;
+	ExprPtr  expr;
+
+	inline UnExpr(
+			UnOp op,
+			const ExprPtr &expr)
+		: op(op), expr(expr)
+	{
+	}
+};
+
+struct IdExpr : public Expr {
+	TokenPtr id;
+
+	inline IdExpr(const TokenPtr &id)
+		: id(id)
+	{
+	}
+};
+
+struct FieldExpr : public Expr {
+	ExprPtr expr;
+	TokenPtr field;
+
+	inline FieldExpr(
+			const ExprPtr &expr,
+			const TokenPtr &field)
+		: expr(expr), field(field)
+	{
+	}
+};
+
 struct Stmt;
 typedef std::shared_ptr<Stmt> StmtPtr;
 

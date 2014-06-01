@@ -18,12 +18,12 @@ module m;
 
   procedure x();
   begin
-    if then
-    elseif then
-      if then
+    if (a+b+c > b) or not k then
+    elseif b <> c then
+      if l = m then
       end;
-    elseif then
-      while do
+    elseif k = y then
+      while d do
       end;
     else
     end;
@@ -34,10 +34,6 @@ module m;
   end y;
 
 begin
-  if then
-    while do
-    end;
-  end;
 end m;
 )";
 

@@ -4,8 +4,15 @@
 %namespace frontend ;
 
 %token	MODULE PROCEDURE FUNCTION BEGIN END TYPE RECORD VAR
-		IF ELSEIF THEN ELSE WHILE DO COLON ID EQ SEMI COMMA
-		LPAREN RPAREN ;
+		IF ELSEIF THEN ELSE WHILE DO COLON ID SEMI COMMA
+		LPAREN RPAREN NOT ;
+
+%nonassoc EQ NE LT LE GT GE ;
+
+%left ADD SUB OR ;
+%left MUL REALDIV DIV MOD AND;
+%left DOT;
+
 %root module;
 
 %%
@@ -133,4 +140,22 @@ optElse:
 ;
 
 expr:
+	expr EQ expr ~> {handleEq}
+| 	expr NE expr ~> {handleNe}
+| 	expr LT expr ~> {handleLt}
+|	expr LE expr ~> {handleLe}
+|	expr GT expr ~> {handleGt}
+| 	expr GE expr ~> {handleGe}
+|	expr ADD expr ~> {handleAdd}
+|	expr SUB expr ~> {handleSub}
+|	expr MUL expr ~> {handleMul}
+|	expr REALDIV expr ~> {handleRealDiv}
+|	expr DIV expr ~> {handleDiv}
+|	expr MOD expr ~> {handleMod}
+|	expr AND expr ~> {handleAnd}
+|	expr OR expr ~> {handleOr}
+|	NOT expr ~> {handleNot}
+|	LPAREN expr RPAREN ~> {handleSubExpr}
+|	expr DOT ID ~> {handleFieldExpr}
+|	ID ~> {handleIdExpr}
 ;

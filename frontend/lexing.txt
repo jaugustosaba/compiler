@@ -6,12 +6,22 @@
 
 %%
 
+"\." ~> dot;
 "=" ~> eq ;
 ";" ~> semi ;
 ":" ~> colon ;
 "," ~> comma ;
+"\+" ~> add;
+"\-" ~> sub;
+"\*" ~> mul;
+"/" ~> realdiv;
 "\(" ~> lparen ;
 "\)" ~> rparen ;
+"<" ~> lt;
+">" ~> gt;
+"<=" ~> le;
+">=" ~> ge;
+"<>" ~> ne;
 "module" ~> module ;
 "procedure" ~> procedure;
 "function" ~> function;
@@ -26,5 +36,10 @@
 "while" ~> whilee;
 "do" ~> doo;
 "then" ~> then;
+"mod" ~> mod;
+"div" ~> div;
+"or" ~> orr;
+"and" ~> andd;
+"not" ~> nott;
 "[A-Za-z_][A-Za-z0-9_]*" ~> id ; 
 "[\n\t ]+" ;
