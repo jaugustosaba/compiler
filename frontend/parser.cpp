@@ -29,7 +29,7 @@ struct Semantic {
 			const Symbol &procdecls)
 	{
 		auto firstconst = std::dynamic_pointer_cast<Constant>(consts.result());
-		auto firsttype = std::dynamic_pointer_cast<Type>(types.result());
+		auto firsttype = std::dynamic_pointer_cast<TypeDecl>(types.result());
 		auto firstvar = std::dynamic_pointer_cast<Variable>(vars.result());
 		auto firstproc = std::dynamic_pointer_cast<Procedure>(procdecls.result());
 		return NodePtr(new Declarations(firstconst, firsttype, firstvar, firstproc));
@@ -87,8 +87,8 @@ struct Semantic {
 
 	inline
 	Result handleAppendTypeDecl(const Symbol &typedecl, const Symbol &typedecls) {
-		auto first = std::dynamic_pointer_cast<Type>(typedecl.result());
-		auto second = std::dynamic_pointer_cast<Type>(typedecl.result());
+		auto first = std::dynamic_pointer_cast<TypeDecl>(typedecl.result());
+		auto second = std::dynamic_pointer_cast<TypeDecl>(typedecl.result());
 		first->next = second;
 		return first;
 	}
@@ -98,7 +98,7 @@ struct Semantic {
 		const Symbol &typedesc, const Symbol &SEMI)
 	{
 		auto desc = std::dynamic_pointer_cast<TypeDescriptor>(typedesc.result());
-		return NodePtr(new Type(ID.token(), desc));
+		return NodePtr(new TypeDecl(ID.token(), desc));
 	}
 
 	inline

@@ -89,15 +89,15 @@ struct PointerDescriptor : public TypeDescriptor {
 
 typedef std::shared_ptr<RecordDescriptor> RecordDescriptorPtr;
 
-struct Type;
-typedef std::shared_ptr<Type> TypePtr;
+struct TypeDecl;
+typedef std::shared_ptr<TypeDecl> TypeDeclPtr;
 
-struct Type : public Node {
+struct TypeDecl : public Node {
 	TokenPtr            id;
 	TypeDescriptorPtr   descriptor;
-	TypePtr             next;
+	TypeDeclPtr         next;
 
-	inline Type(const TokenPtr &id, const TypeDescriptorPtr &descriptor)
+	inline TypeDecl(const TokenPtr &id, const TypeDescriptorPtr &descriptor)
 		: id(id), descriptor(descriptor), next()
 	{
 	}
@@ -140,13 +140,13 @@ struct Constant : public Node {
 
 struct Declarations : public Node {
 	ConstantPtr   firstConstant;
-	TypePtr       firstType;
+	TypeDeclPtr       firstType;
 	VariablePtr   firstVariable;
 	ProcedurePtr  firstProcedure;
 
 	inline Declarations(
 			const ConstantPtr &firstConstant,
-			const TypePtr &firstType,
+			const TypeDeclPtr &firstType,
 			const VariablePtr &firstVariable,
 			const ProcedurePtr &firstProcedure
 		)
