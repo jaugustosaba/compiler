@@ -55,7 +55,7 @@ protected:
 	}
 };
 
-typedef std::unordered_map<std::string, Type*> FieldTypeMap;
+typedef std::unordered_map<std::string, const Type*> FieldTypeMap;
 
 class RecordType : public Type {
 	friend class TypeChecker;
@@ -84,35 +84,35 @@ private:
 class FunctionType : public ProcedureType {
 	friend class TypeChecker;
 protected:
-	inline FunctionType(ParamTypeVect&& params, Type *returnType)
+	inline FunctionType(ParamTypeVect&& params, const Type *returnType)
 		: ProcedureType(std::move(params)), m_returnType(returnType)
 	{
 	}
 private:
-	Type* m_returnType;
+	const Type* m_returnType;
 };
 
 class PointerType : public Type {
 	friend class TypeChecker;
 protected:
-	inline PointerType(RecordType* targetType)
+	inline PointerType(const RecordType* targetType)
 		: Type(Id::Pointer), m_targetType(targetType)
 	{
 	}
 private:
-	RecordType* m_targetType;
+	const RecordType* m_targetType;
 };
 
 class ArrayType : public Type {
 	friend class TypeChecker;
 protected:
-	inline ArrayType(size_t dimension, Type* type)
+	inline ArrayType(size_t dimension, const Type* type)
 		: Type(Id::Array), m_dimension(dimension), m_type(type)
 	{
 	}
 private:
-	size_t  m_dimension;
-	Type*   m_type;
+	size_t        m_dimension;
+	const Type*   m_type;
 };
 
 class TypeError : public std::exception {
@@ -128,6 +128,11 @@ public:
 
 class TypeChecker {
 	typedef std::unique_ptr<Type> TypePtr;
+	typedef std::unique_ptr<RecordType> RecordTypePtr;
+	typedef std::unique_ptr<ProcedureType> ProcedureTypePtr;
+	typedef std::unique_ptr<FunctionType> FunctionTypePtr;
+	typedef std::unique_ptr<ArrayType> ArrayTypePtr;
+	typedef std::unique_ptr<PointerType> PointerTypePtr;
 
 	static VoidType s_void;
 	static IntegerType s_integer;
@@ -143,29 +148,74 @@ public:
 	BooleanType* booleanType() const;
 	RecordType* makeRecordType(FieldTypeMap &&fields);
 	ProcedureType* makeProcedureType(ParamTypeVect &&params);
-	FunctionType* makeFunctionType(ParamTypeVect &&params, Type* returnType);
-	ArrayType* makeArrayType(size_t dimension, Type* type);
-	PointerType* makePointerType(Type* targetType);
-	Type* checkAdd(const Type *left, const Type *right) const;
-	Type* checkSub(const Type *left, const Type *right) const;
-	Type* checkMul(const Type *left, const Type *right) const;
-	Type* checkRealDiv(const Type *left, const Type *right) const;
-	Type* checkDiv(const Type *left, const Type *right) const;
-	Type* checkMod(const Type *left, const Type *right) const;
-	Type* checkAnd(const Type *left, const Type *right) const;
-	Type* checkOr(const Type *left, const Type *right) const;
-	Type* checkNot(const Type *left, const Type *right) const;
-	Type* checkEQ(const Type *left, const Type *right) const;
-	Type* checkNE(const Type *left, const Type *right) const;
-	Type* checkLT(const Type *left, const Type *right) const;
-	Type* checkLE(const Type *left, const Type *right) const;
-	Type* checkGE(const Type *left, const Type *right) const;
-	Type* checkGT(const Type *left, const Type *right) const;
+	FunctionType* makeFunctionType(ParamTypeVect &&params, const Type* returnType);
+	ArrayType* makeArrayType(size_t dimension, const Type* type);
+	PointerType* makePointerType(const Type* targetType);
+	const Type* checkAdd(const Type *left, const Type *right) const;
+	const Type* checkSub(const Type *left, const Type *right) const;
+	const Type* checkMul(const Type *left, const Type *right) const;
+	const Type* checkRealDiv(const Type *left, const Type *right) const;
+	const Type* checkDiv(const Type *left, const Type *right) const;
+	const Type* checkMod(const Type *left, const Type *right) const;
+	const Type* checkAnd(const Type *left, const Type *right) const;
+	const Type* checkOr(const Type *left, const Type *right) const;
+	const Type* checkNot(const Type *type) const;
+	const Type* checkEQ(const Type *left, const Type *right) const;
+	const Type* checkNE(const Type *left, const Type *right) const;
+	const Type* checkLT(const Type *left, const Type *right) const;
+	const Type* checkLE(const Type *left, const Type *right) const;
+	const Type* checkGE(const Type *left, const Type *right) const;
+	const Type* checkGT(const Type *left, const Type *right) const;
 	void checkCall(const Type *left, const std::vector<Type*> &params) const;
-	Type* checkCallExpr(const Type *left, const std::vector<Type*> &params) const;
-	Type* checkDeref(const Type *type) const;
-	Type* checkField(const Type *type, const std::string &field) const;
-	Type* checkIndex(const Type *type, const Type &indexType) const;
+	const Type* checkCallExpr(const Type *left, const std::vector<Type*> &params) const;
+	const Type* checkDeref(const Type *type) const;
+	const Type* checkField(const Type *type, const std::string &field) const;
+	const Type* checkIndex(const Type *type, const Type *indexType) const;
+
+private:
+	void mismatch() const;
+	inline void assertSameScalar(const Type *left, const Type *right) const {
+		if ((left->m_id != Type::Id::Scalar) && (left != right)) {
+			mismatch();
+		}
+	}
+	inline bool isBoolean(const Type *type) const {
+		return type == &s_boolean;
+	}
+	inline bool isInteger(const Type *type) const {
+		return type == &s_integer;
+	}
+	inline bool isNumeric(const Type *type) const {
+		return isInteger(type);
+	}
+	inline void assertSameNumeric(const Type *left, const Type *right) const {
+		assertSameScalar(left, right);
+		if (!isNumeric(left)) {
+			mismatch();
+		}
+	}
+	inline void assertBothIntegers(const Type *left, const Type *right) const {
+		assertSameScalar(left, right);
+		if (!isInteger(left)) {
+			mismatch();
+		}
+	}
+	inline void assertBoolean(const Type *type) const {
+		if (!isBoolean(type)) {
+			mismatch();
+		}
+	}
+	inline void assertInteger(const Type *type) const {
+		if (!isInteger(type)) {
+			mismatch();
+		}
+	}
+	inline void assertBothBooleans(const Type *left, const Type *right) const {
+		assertSameScalar(left, right);
+		if (!isBoolean(left)) {
+			mismatch();
+		}
+	}
 };
 
 } // namespace frontend
