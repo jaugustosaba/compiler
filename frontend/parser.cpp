@@ -28,9 +28,9 @@ struct Semantic {
 			const Symbol &vars,
 			const Symbol &procdecls)
 	{
-		auto firstconst = std::dynamic_pointer_cast<Constant>(consts.result());
-		auto firsttype = std::dynamic_pointer_cast<TypeDecl>(types.result());
-		auto firstvar = std::dynamic_pointer_cast<Variable>(vars.result());
+		auto firstconst = std::dynamic_pointer_cast<ConstDecl>(consts.result());
+		auto firsttype = std::dynamic_pointer_cast<UserTypeDecl>(types.result());
+		auto firstvar = std::dynamic_pointer_cast<VarDecl>(vars.result());
 		auto firstproc = std::dynamic_pointer_cast<Procedure>(procdecls.result());
 		return NodePtr(new Declarations(firstconst, firsttype, firstvar, firstproc));
 	}
@@ -87,8 +87,8 @@ struct Semantic {
 
 	inline
 	Result handleAppendTypeDecl(const Symbol &typedecl, const Symbol &typedecls) {
-		auto first = std::dynamic_pointer_cast<TypeDecl>(typedecl.result());
-		auto second = std::dynamic_pointer_cast<TypeDecl>(typedecl.result());
+		auto first = std::dynamic_pointer_cast<UserTypeDecl>(typedecl.result());
+		auto second = std::dynamic_pointer_cast<UserTypeDecl>(typedecls.result());
 		first->next = second;
 		return first;
 	}
@@ -98,7 +98,7 @@ struct Semantic {
 		const Symbol &typedesc, const Symbol &SEMI)
 	{
 		auto desc = std::dynamic_pointer_cast<TypeDescriptor>(typedesc.result());
-		return NodePtr(new TypeDecl(ID.token(), desc));
+		return NodePtr(new UserTypeDecl(ID.token(), desc));
 	}
 
 	inline
@@ -133,8 +133,8 @@ struct Semantic {
 
 	inline
 	Result handleAppendVarDecl(const Symbol &vardecl, const Symbol &vardecls) {
-		auto first = std::dynamic_pointer_cast<Variable>(vardecl.result());
-		auto second = std::dynamic_pointer_cast<Variable>(vardecls.result());
+		auto first = std::dynamic_pointer_cast<VarDecl>(vardecl.result());
+		auto second = std::dynamic_pointer_cast<VarDecl>(vardecls.result());
 		first->next = second;
 		return first;
 	}
@@ -144,7 +144,7 @@ struct Semantic {
 			const Symbol &ID1, const Symbol &SEMI)
 	{
 		auto firstIdent = std::dynamic_pointer_cast<Ident>(ID0.result());
-		return NodePtr(new Variable(firstIdent, ID1.token()));
+		return NodePtr(new VarDecl(firstIdent, ID1.token()));
 	}
 
 	inline
@@ -463,8 +463,8 @@ struct Semantic {
 
 	inline
 	Result handleAppendConst(const Symbol &constt, const Symbol &constlist) {
-		auto first = std::dynamic_pointer_cast<Constant>(constt.result());
-		auto second = std::dynamic_pointer_cast<Constant>(constlist.result());
+		auto first = std::dynamic_pointer_cast<ConstDecl>(constt.result());
+		auto second = std::dynamic_pointer_cast<ConstDecl>(constlist.result());
 		first->next = second;
 		return first;
 	}
@@ -475,17 +475,18 @@ struct Semantic {
 			const Symbol &expr, const Symbol &SEMI)
 	{
 		auto expr0 = std::dynamic_pointer_cast<Expr>(expr.result());
-		return NodePtr(new Constant(ID.token(), expr0));
+		return NodePtr(new ConstDecl(ID.token(), expr0));
 	}
 };
 
 } // anonymous namespace
 
-NodePtr parse(std::istream &input) {
+ModulePtr parse(std::istream &input) {
 	Lexer lexer(input);
 	lexer.next();
 	Semantic semantic;
-	return ParserHelper::parse(lexer, semantic);
+	auto expr = ParserHelper::parse(lexer, semantic);
+	return std::dynamic_pointer_cast<Module>(expr);
 }
 
 } // namespace frontend

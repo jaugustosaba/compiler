@@ -1,4 +1,4 @@
-#include "type.h"
+#include "type-checker.h"
 
 namespace frontend {
 
@@ -140,12 +140,32 @@ const Type* TypeChecker::checkGT(const Type *left, const Type *right) const {
 	return left;
 }
 
-void TypeChecker::checkCall(const Type *left, const std::vector<Type*> &params) const {
+void TypeChecker::checkCallAux(const ProcedureType *proctype, const std::vector<Type*> &params) const {
+	if (proctype->m_params.size() != params.size()) {
+		mismatch();
+	}
+	for (size_t i=0; i<params.size(); ++i) {
+		auto desttype = proctype->m_params[i];
+		auto srctype = params[i];
+		checkAssign(desttype, srctype);
+	}
+}
 
+void TypeChecker::checkCall(const Type *left, const std::vector<Type*> &params) const {
+	auto proctype = dynamic_cast<const ProcedureType*>(left);
+	if (proctype == nullptr) {
+		mismatch();
+	}
+	checkCallAux(proctype, params);
 }
 
 const Type* TypeChecker::checkCallExpr(const Type *left, const std::vector<Type*> &params) const {
-
+	auto functype = dynamic_cast<const FunctionType*>(left);
+	if (functype == nullptr) {
+		mismatch();
+	}
+	checkCallAux(functype, params);
+	return functype->m_returnType;
 }
 
 const Type* TypeChecker::checkDeref(const Type *type) const {
@@ -175,6 +195,10 @@ const Type* TypeChecker::checkIndex(const Type *type, const Type *indexType) con
 		mismatch();
 	}
 	return array->m_type;
+}
+
+void TypeChecker::checkAssign(const Type *dest, const Type *value) const {
+	assertSameScalar(dest, value);
 }
 
 void TypeChecker::mismatch() const {

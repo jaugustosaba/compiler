@@ -6,18 +6,97 @@
 #include <vector>
 
 #include "lexer.h"
+#include "type-checker.h"
+#include "symbol-table.h"
 
 namespace frontend {
+
+struct Type;
+struct Node;
+struct Decl;
+struct Ident;
+struct TypeDescriptor;
+struct Field;
+struct RecordDescriptor;
+struct ArrayDescriptor;
+struct PointerDescriptor;
+struct UserTypeDecl;
+struct Expr;
+struct VarDecl;
+struct ConstDecl;
+struct Declarations;
+struct IntExpr;
+struct BinExpr;
+struct UnExpr;
+struct IdExpr;
+struct FieldExpr;
+struct ExprList;
+struct CallExpr;
+struct DerefExpr;
+struct IndexExpr;
+struct Stmt;
+struct Elseif;
+struct IfStmt;
+struct WhileStmt;
+struct CallStmt;
+struct AssignStmt;
+struct Module;
+struct FParam;
+struct Procedure;
+struct Function;
+
+typedef std::shared_ptr<Node> NodePtr;
+typedef std::shared_ptr<Ident> IdentPtr;
+typedef std::shared_ptr<TypeDescriptor> TypeDescriptorPtr;
+typedef std::shared_ptr<Field> FieldPtr;
+typedef std::shared_ptr<RecordDescriptor> RecordDescriptorPtr;
+typedef std::shared_ptr<UserTypeDecl> UserTypeDeclPtr;
+typedef std::shared_ptr<Expr> ExprPtr;
+typedef std::shared_ptr<VarDecl> VarDeclPtr;
+typedef std::shared_ptr<ConstDecl> ConstDeclPtr;
+typedef std::shared_ptr<Declarations> DeclarationsPtr;
+typedef std::shared_ptr<ExprList> ExprListPtr;
+typedef std::shared_ptr<Stmt> StmtPtr;
+typedef std::shared_ptr<Elseif> ElseifPtr;
+typedef std::shared_ptr<Module> ModulePtr;
+typedef std::shared_ptr<FParam> FParamPtr;
+typedef std::shared_ptr<Procedure> ProcedurePtr;
+
+enum class UnOp {
+	Not,
+};
+
+enum class BinOp {
+	EQ,
+	NE,
+	LT,
+	LE,
+	GT,
+	GE,
+	Add,
+	Sub,
+	Mul,
+	RealDiv,
+	Div,
+	Mod,
+	And,
+	Or
+};
 
 struct Node {
 	virtual ~Node() {
 	}
+protected:
+	inline Node() {
+	}
 };
 
-typedef std::shared_ptr<Node> NodePtr;
-
-struct Ident;
-typedef std::shared_ptr<Ident> IdentPtr;
+struct Decl : public Node {
+	const Type* type;
+protected:
+	inline Decl() : type(nullptr) {
+	}
+};
 
 struct Ident : public Node {
 	TokenPtr  id;
@@ -29,17 +108,8 @@ struct Ident : public Node {
 	}
 };
 
-struct Procedure;
-typedef std::shared_ptr<Procedure> ProcedurePtr;
-
 struct TypeDescriptor : public Node {
 };
-
-typedef std::shared_ptr<TypeDescriptor> TypeDescriptorPtr;
-
-struct Field;
-
-typedef std::shared_ptr<Field> FieldPtr;
 
 struct Field : public Node {
 	IdentPtr  firstIdent;
@@ -64,9 +134,6 @@ struct RecordDescriptor : public TypeDescriptor {
 	}
 };
 
-struct ExprList;
-typedef std::shared_ptr<ExprList> ExprListPtr;
-
 struct ArrayDescriptor : public TypeDescriptor {
 	ExprListPtr firstExpr;
 	TokenPtr    type;
@@ -83,106 +150,101 @@ struct ArrayDescriptor : public TypeDescriptor {
 struct PointerDescriptor : public TypeDescriptor {
 	TokenPtr type;
 
-	inline PointerDescriptor(const TokenPtr &type) : type(type) {
+	inline PointerDescriptor(const TokenPtr &type)
+		: type(type)
+	{
 	}
 };
 
-typedef std::shared_ptr<RecordDescriptor> RecordDescriptorPtr;
+struct TypeDecl : public Decl {
+protected:
+	inline TypeDecl() : Decl() {
+	}
+};
 
-struct TypeDecl;
-typedef std::shared_ptr<TypeDecl> TypeDeclPtr;
+struct BuiltinTypeDecl : public TypeDecl {
+	inline BuiltinTypeDecl(const Type* type) : TypeDecl() {
+		this->type = type;
+	}
+};
 
-struct TypeDecl : public Node {
+struct UserTypeDecl : public TypeDecl {
 	TokenPtr            id;
 	TypeDescriptorPtr   descriptor;
-	TypeDeclPtr         next;
+	UserTypeDeclPtr     next;
 
-	inline TypeDecl(const TokenPtr &id, const TypeDescriptorPtr &descriptor)
-		: id(id), descriptor(descriptor), next()
+	inline UserTypeDecl(const TokenPtr &id, const TypeDescriptorPtr &descriptor)
+		: TypeDecl(), id(id), descriptor(descriptor), next()
 	{
 	}
+	void loadSymbols(SymbolTable &st);
 };
 
 struct Expr : public Node {
-};
+	Type* type;
 
-typedef std::shared_ptr<Expr> ExprPtr;
-
-struct Variable;
-typedef std::shared_ptr<Variable> VariablePtr;
-
-struct Variable : public Node {
-	IdentPtr     firstIdent;
-	TokenPtr     type;
-	VariablePtr  next;
-
-	inline Variable(const IdentPtr &firstIdent, const TokenPtr &type)
-		: firstIdent(firstIdent), type(type), next()
-	{
+	inline Expr() : type(nullptr) {
 	}
 };
 
-struct Constant;
-typedef std::shared_ptr<Constant> ConstantPtr;
+struct LValue : public Decl {
+protected:
+	inline LValue() : Decl() {
+	}
+};
 
-struct Constant : public Node {
-	TokenPtr     id;
-	ExprPtr      expr;
-	ConstantPtr  next;
+struct VarDecl : public LValue {
+	IdentPtr     firstIdent;
+	TokenPtr     type;
+	VarDeclPtr   next;
 
-	inline Constant(
+	inline VarDecl(const IdentPtr &firstIdent, const TokenPtr &type)
+		: LValue(), firstIdent(firstIdent), type(type), next()
+	{
+	}
+	void loadSymbols(SymbolTable &st);
+};
+
+struct ConstDecl : public Decl {
+	TokenPtr      id;
+	ExprPtr       expr;
+	ConstDeclPtr  next;
+
+	inline ConstDecl(
 			const TokenPtr &id,
 			const ExprPtr &expr)
 		: id(id), expr(expr)
 	{
 	}
+	void loadSymbols(SymbolTable &st);
 };
 
 struct Declarations : public Node {
-	ConstantPtr   firstConstant;
-	TypeDeclPtr       firstType;
-	VariablePtr   firstVariable;
-	ProcedurePtr  firstProcedure;
+	ConstDeclPtr     firstConstant;
+	UserTypeDeclPtr  firstType;
+	VarDeclPtr       firstVariable;
+	ProcedurePtr     firstProcedure;
 
 	inline Declarations(
-			const ConstantPtr &firstConstant,
-			const TypeDeclPtr &firstType,
-			const VariablePtr &firstVariable,
-			const ProcedurePtr &firstProcedure
-		)
+			const ConstDeclPtr &firstConstant,
+			const UserTypeDeclPtr &firstType,
+			const VarDeclPtr &firstVariable,
+			const ProcedurePtr &firstProcedure)
 		: firstConstant(firstConstant),
 		  firstType(firstType),
 		  firstVariable(firstVariable),
 		  firstProcedure(firstProcedure)
 	{
 	}
+	void loadSymbols(SymbolTable &parent);
 };
-
-typedef std::shared_ptr<Declarations> DeclarationsPtr;
 
 struct IntExpr : public Expr {
 	TokenPtr value;
 
 	inline
-	IntExpr(const TokenPtr &value) : value(value) {
+	IntExpr(const TokenPtr &value) : Expr(), value(value) {
 	}
-};
-
-enum class BinOp {
-	EQ,
-	NE,
-	LT,
-	LE,
-	GT,
-	GE,
-	Add,
-	Sub,
-	Mul,
-	RealDiv,
-	Div,
-	Mod,
-	And,
-	Or
 };
 
 struct BinExpr : public Expr {
@@ -194,13 +256,9 @@ struct BinExpr : public Expr {
 			BinOp op,
 			const ExprPtr &left,
 			const ExprPtr &right)
-		: op(op), left(left), right(right)
+		: Expr(), op(op), left(left), right(right)
 	{
 	}
-};
-
-enum class UnOp {
-	Not,
 };
 
 struct UnExpr : public Expr {
@@ -210,7 +268,7 @@ struct UnExpr : public Expr {
 	inline UnExpr(
 			UnOp op,
 			const ExprPtr &expr)
-		: op(op), expr(expr)
+		: Expr(), op(op), expr(expr)
 	{
 	}
 };
@@ -219,7 +277,7 @@ struct IdExpr : public Expr {
 	TokenPtr id;
 
 	inline IdExpr(const TokenPtr &id)
-		: id(id)
+		: Expr(), id(id)
 	{
 	}
 };
@@ -231,7 +289,7 @@ struct FieldExpr : public Expr {
 	inline FieldExpr(
 			const ExprPtr &expr,
 			const TokenPtr &field)
-		: expr(expr), field(field)
+		: Expr(), expr(expr), field(field)
 	{
 	}
 };
@@ -251,7 +309,7 @@ struct CallExpr : public Expr {
 	ExprListPtr  firstExpr;
 
 	inline CallExpr(const ExprPtr &lvalue, const ExprListPtr &firstExpr)
-		: lvalue(lvalue), firstExpr(firstExpr)
+		: Expr(), lvalue(lvalue), firstExpr(firstExpr)
 	{
 	}
 };
@@ -259,7 +317,9 @@ struct CallExpr : public Expr {
 struct DerefExpr : public Expr {
 	ExprPtr lvalue;
 
-	inline DerefExpr(const ExprPtr &lvalue) : lvalue(lvalue) {
+	inline DerefExpr(const ExprPtr &lvalue)
+		: Expr(), lvalue(lvalue)
+	{
 	}
 };
 
@@ -268,13 +328,10 @@ struct IndexExpr : public Expr {
 	ExprListPtr  firstExpr;
 
 	inline IndexExpr(const ExprPtr &lvalue, const ExprListPtr &firstExpr)
-		: lvalue(lvalue), firstExpr(firstExpr)
+		: Expr(), lvalue(lvalue), firstExpr(firstExpr)
 	{
 	}
 };
-
-struct Stmt;
-typedef std::shared_ptr<Stmt> StmtPtr;
 
 struct Stmt : public Node {
 	StmtPtr next;
@@ -282,9 +339,6 @@ struct Stmt : public Node {
 	inline Stmt() : next() {
 	}
 };
-
-struct Elseif;
-typedef std::shared_ptr<Elseif> ElseifPtr;
 
 struct Elseif : public Node {
 	ExprPtr    expr;
@@ -309,12 +363,12 @@ struct IfStmt : public Stmt {
 			const ExprPtr &expr,
 			const StmtPtr &firstStmt,
 			const ElseifPtr &firstElseif,
-			const StmtPtr &firstElseStmt
-		) : Stmt(),
-			expr(expr),
-			firstStmt(firstStmt),
-			firstElseif(firstElseif),
-			firstElseStmt(firstElseStmt)
+			const StmtPtr &firstElseStmt)
+		: Stmt(),
+		  expr(expr),
+		  firstStmt(firstStmt),
+		  firstElseif(firstElseif),
+		  firstElseStmt(firstElseStmt)
 	{
 	}
 };
@@ -351,6 +405,7 @@ struct AssignStmt : public Stmt {
 };
 
 struct Module : public Node {
+	SymbolTable      symbolTable;
 	TokenPtr         id0;
 	DeclarationsPtr  decls;
 	TokenPtr         id1;
@@ -359,16 +414,13 @@ struct Module : public Node {
 			const TokenPtr &id0,
 			const DeclarationsPtr &decls,
 			const TokenPtr &id1)
-		: id0(id0), decls(decls), id1(id1)
+		: symbolTable(), id0(id0), decls(decls), id1(id1)
 	{
 	}
+	void loadSymbols(const SymbolTable* builtins);
 };
 
-struct FParam;
-
-typedef std::shared_ptr<FParam> FParamPtr;
-
-struct FParam : public Node {
+struct FParam : public Decl {
 	bool          isVar;
 	IdentPtr      firstIdent;
 	TokenPtr      type;
@@ -381,9 +433,11 @@ struct FParam : public Node {
 		: isVar(isVar), firstIdent(firstIdent), type(type)
 	{
 	}
+	void loadSymbols(SymbolTable &st);
 };
 
-struct Procedure : public Node {
+struct Procedure : public LValue {
+	SymbolTable      symbolTable;
 	TokenPtr         id0;
 	FParamPtr        firstFParam;
 	DeclarationsPtr  decls;
@@ -398,10 +452,11 @@ struct Procedure : public Node {
 			const StmtPtr &firstStmt,
 			const TokenPtr &id1
 		)
-		: id0(id0), decls(decls), firstStmt(firstStmt),
-		  id1(id1), next()
+		: LValue(), symbolTable(), id0(id0), decls(decls),
+		  firstStmt(firstStmt), id1(id1), next()
 	{
 	}
+	void loadSymbols(SymbolTable &parent);
 };
 
 struct Function : public Procedure {

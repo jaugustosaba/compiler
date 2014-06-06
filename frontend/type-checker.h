@@ -1,5 +1,5 @@
-#ifndef TYPE_H_
-#define TYPE_H_
+#ifndef TYPE_CHECKER_H_
+#define TYPE_CHECKER_H_
 
 #include <vector>
 #include <memory>
@@ -171,6 +171,7 @@ public:
 	const Type* checkDeref(const Type *type) const;
 	const Type* checkField(const Type *type, const std::string &field) const;
 	const Type* checkIndex(const Type *type, const Type *indexType) const;
+	void checkAssign(const Type *dest, const Type *value) const;
 
 private:
 	void mismatch() const;
@@ -216,6 +217,7 @@ private:
 			mismatch();
 		}
 	}
+	void checkCallAux(const ProcedureType *proctype, const std::vector<Type*> &params) const;
 };
 
 } // namespace frontend

@@ -50,8 +50,23 @@ begin
 end m;
 )";
 
+namespace frontend {
+
+void run(std::istream &input) {
+	TypeChecker tc;
+	BuiltinTypeDecl integer(tc.integerType());
+	BuiltinTypeDecl boolean(tc.booleanType());
+	SymbolTable builtins;
+	builtins.declare("integer", &integer);
+	builtins.declare("boolean", &boolean);
+	auto module = parse(input);
+	module->loadSymbols(&builtins);
+}
+
+} // namespace frontend
+
 int main(int argc, char **argv) {
 	std::istringstream input(INPUT);
-	auto expr = frontend::parse(input);
+	frontend::run(input);
 	return EXIT_SUCCESS;
 }
