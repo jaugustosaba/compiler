@@ -1,4 +1,4 @@
-#include "symbol-table.h"
+#include "ast.h"
 
 namespace frontend {
 
@@ -26,6 +26,15 @@ Decl* SymbolTable::lookup(const std::string &name) const {
 		return m_parent->lookup(name);
 	}
 	throw NameError("symbol not found");
+}
+
+const Type* SymbolTable::lookupType(const std::string &name) const {
+	auto decl = lookup(name);
+	auto type = dynamic_cast<const Type*>(decl);
+	if (type == nullptr) {
+		throw NameError("no a type");
+	}
+	return type;
 }
 
 } // namespace frontend

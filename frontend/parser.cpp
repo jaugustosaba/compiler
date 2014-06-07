@@ -60,7 +60,7 @@ struct Semantic {
 		auto decls1 = std::dynamic_pointer_cast<Declarations>(decls0.result());
 		auto fps = std::dynamic_pointer_cast<FParam>(fparams.result());
 		auto stmts1 = std::dynamic_pointer_cast<Stmt>(stmts.result());
-		ProcedurePtr ptr(new Procedure(
+		BaseProcedurePtr ptr(new Procedure(
 				ID0.token(), fps, decls1, stmts1, ID1.token()));
 		return ptr;
 	}
@@ -75,7 +75,7 @@ struct Semantic {
 		auto decls1 = std::dynamic_pointer_cast<Declarations>(decls0.result());
 		auto fps = std::dynamic_pointer_cast<FParam>(fparams.result());
 		auto stmts1 = std::dynamic_pointer_cast<Stmt>(stmts.result());
-		ProcedurePtr ptr(new Function(
+		BaseProcedurePtr ptr(new Function(
 				ID0.token(), fps, RETTYPE.token(), decls1, stmts1, ID1.token()));
 		return ptr;
 	}

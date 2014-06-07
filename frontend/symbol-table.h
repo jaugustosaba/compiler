@@ -8,6 +8,7 @@
 namespace frontend {
 
 struct Decl;
+struct Type;
 
 struct NameError : public std::exception {
 	std::string m_message;
@@ -35,6 +36,7 @@ public:
 	}
 	void declare(const std::string &name, Decl *decl);
 	Decl* lookup(const std::string &name) const;
+	const Type* lookupType(const std::string &name) const;
 };
 
 } // namespace frontend

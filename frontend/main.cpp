@@ -53,14 +53,14 @@ end m;
 namespace frontend {
 
 void run(std::istream &input) {
-	TypeChecker tc;
-	BuiltinTypeDecl integer(tc.integerType());
-	BuiltinTypeDecl boolean(tc.booleanType());
-	SymbolTable builtins;
-	builtins.declare("integer", &integer);
-	builtins.declare("boolean", &boolean);
+//	TypeChecker tc;
+//	BuiltinTypeDecl integer(tc.integerType());
+//	BuiltinTypeDecl boolean(tc.booleanType());
+//	SymbolTable builtins;
+//	builtins.declare("integer", &integer);
+//	builtins.declare("boolean", &boolean);
 	auto module = parse(input);
-	module->loadSymbols(&builtins);
+//	module->loadSymbols(&builtins);
 }
 
 } // namespace frontend

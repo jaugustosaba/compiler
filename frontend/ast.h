@@ -6,12 +6,13 @@
 #include <vector>
 
 #include "lexer.h"
-#include "type-checker.h"
+//#include "type-checker.h"
 #include "symbol-table.h"
 
 namespace frontend {
 
 struct Type;
+struct RecordType;
 struct Node;
 struct Decl;
 struct Ident;
@@ -42,9 +43,11 @@ struct CallStmt;
 struct AssignStmt;
 struct Module;
 struct FParam;
+struct BaseProcedure;
 struct Procedure;
 struct Function;
 
+typedef std::unique_ptr<Type> TypePtr;
 typedef std::shared_ptr<Node> NodePtr;
 typedef std::shared_ptr<Ident> IdentPtr;
 typedef std::shared_ptr<TypeDescriptor> TypeDescriptorPtr;
@@ -60,7 +63,7 @@ typedef std::shared_ptr<Stmt> StmtPtr;
 typedef std::shared_ptr<Elseif> ElseifPtr;
 typedef std::shared_ptr<Module> ModulePtr;
 typedef std::shared_ptr<FParam> FParamPtr;
-typedef std::shared_ptr<Procedure> ProcedurePtr;
+typedef std::shared_ptr<BaseProcedure> BaseProcedurePtr;
 
 enum class UnOp {
 	Not,
@@ -83,6 +86,43 @@ enum class BinOp {
 	Or
 };
 
+struct Type {
+	const static Type BOOLEAN;
+	const static Type INTEGER;
+	virtual ~Type() {
+	}
+protected:
+	inline Type() {
+	}
+};
+
+struct ArrayType : public Type {
+	size_t       dimension;
+	const Type*  elementType;
+};
+
+struct RecordType : public Type {
+	std::unordered_map<std::string, const Type*> fieldTypes;
+};
+
+struct PointerType : public Type {
+	const RecordType*  targetType;
+};
+
+struct FParamType {
+	const Type*  type;
+	bool         isVar;
+	bool         isOpenArray;
+};
+
+struct ProcedureType : public Type {
+	std::vector<FParamType> params;
+};
+
+struct FunctionType : public ProcedureType {
+	const Type* returnType;
+};
+
 struct Node {
 	virtual ~Node() {
 	}
@@ -92,10 +132,7 @@ protected:
 };
 
 struct Decl : public Node {
-	const Type* type;
-protected:
-	inline Decl() : type(nullptr) {
-	}
+	virtual const Type* effectiveType() const = 0;
 };
 
 struct Ident : public Node {
@@ -109,51 +146,64 @@ struct Ident : public Node {
 };
 
 struct TypeDescriptor : public Node {
+	virtual void loadType(SymbolTable &st) = 0;
+	virtual const Type* effectiveType() const = 0;
 };
 
 struct Field : public Node {
 	IdentPtr  firstIdent;
-	TokenPtr  type;
+	TokenPtr  typeName;
 	FieldPtr  next;
 
-	inline Field(
-			const IdentPtr &firstIdent,
-			const TokenPtr &type
-		)
-		: firstIdent(firstIdent), type(type), next()
+	inline Field(const IdentPtr &firstIdent, const TokenPtr &typeName)
+		: firstIdent(firstIdent), typeName(typeName), next()
 	{
 	}
 };
 
 struct RecordDescriptor : public TypeDescriptor {
-	FieldPtr firstField;
+	RecordType type;
+	FieldPtr   firstField;
 
 	inline RecordDescriptor(const FieldPtr &firstField)
-		: firstField(firstField)
+		: TypeDescriptor(),
+		  type(),
+		  firstField(firstField)
 	{
 	}
+	void loadType(SymbolTable &st) override;
+	const Type* effectiveType() const override;
 };
 
 struct ArrayDescriptor : public TypeDescriptor {
-	ExprListPtr firstExpr;
-	TokenPtr    type;
+	ArrayType    type;
+	ExprListPtr  firstExpr;
+	TokenPtr     elementTypeName;
 
 	inline ArrayDescriptor(
 			const ExprListPtr &firstExpr,
-			const TokenPtr &type)
-		: firstExpr(firstExpr), type(type)
+			const TokenPtr &elementTypeName)
+		: TypeDescriptor(),
+		  type(),
+		  firstExpr(firstExpr),
+		  elementTypeName(elementTypeName)
 	{
 	}
-
+	void loadType(SymbolTable &st) override;
+	const Type* effectiveType() const override;
 };
 
 struct PointerDescriptor : public TypeDescriptor {
-	TokenPtr type;
+	PointerType  type;
+	TokenPtr     typeName;
 
-	inline PointerDescriptor(const TokenPtr &type)
-		: type(type)
+	inline PointerDescriptor(const TokenPtr &typeName)
+		: TypeDescriptor(),
+		  typeName(typeName)
 	{
 	}
+	void loadType(SymbolTable &st) override;
+	const Type* effectiveType() const override;
 };
 
 struct TypeDecl : public Decl {
@@ -163,9 +213,13 @@ protected:
 };
 
 struct BuiltinTypeDecl : public TypeDecl {
-	inline BuiltinTypeDecl(const Type* type) : TypeDecl() {
-		this->type = type;
+	const Type *type;
+
+	inline BuiltinTypeDecl(const Type* type)
+		: TypeDecl(), type(type)
+	{
 	}
+	const Type* effectiveType() const override;
 };
 
 struct UserTypeDecl : public TypeDecl {
@@ -178,12 +232,16 @@ struct UserTypeDecl : public TypeDecl {
 	{
 	}
 	void loadSymbols(SymbolTable &st);
+	void loadTypes(SymbolTable &st);
+	const Type* effectiveType() const override;
 };
 
 struct Expr : public Node {
-	Type* type;
+	const Type* type;
 
-	inline Expr() : type(nullptr) {
+	inline Expr()
+		: type(nullptr)
+	{
 	}
 };
 
@@ -195,41 +253,46 @@ protected:
 
 struct VarDecl : public LValue {
 	IdentPtr     firstIdent;
-	TokenPtr     type;
+	TokenPtr     typeName;
+	const Type*  type;
 	VarDeclPtr   next;
 
-	inline VarDecl(const IdentPtr &firstIdent, const TokenPtr &type)
-		: LValue(), firstIdent(firstIdent), type(type), next()
+	inline VarDecl(const IdentPtr &firstIdent, const TokenPtr &typeName)
+		: LValue(), firstIdent(firstIdent), typeName(typeName),
+		  type(nullptr), next()
 	{
 	}
+	const Type* effectiveType() const override;
 	void loadSymbols(SymbolTable &st);
 };
 
 struct ConstDecl : public Decl {
 	TokenPtr      id;
 	ExprPtr       expr;
+	const Type*   type;
 	ConstDeclPtr  next;
 
 	inline ConstDecl(
 			const TokenPtr &id,
 			const ExprPtr &expr)
-		: id(id), expr(expr)
+		: id(id), expr(expr), type(nullptr), next()
 	{
 	}
 	void loadSymbols(SymbolTable &st);
+	const Type* effectiveType() const override;
 };
 
 struct Declarations : public Node {
-	ConstDeclPtr     firstConstant;
-	UserTypeDeclPtr  firstType;
-	VarDeclPtr       firstVariable;
-	ProcedurePtr     firstProcedure;
+	ConstDeclPtr      firstConstant;
+	UserTypeDeclPtr   firstType;
+	VarDeclPtr        firstVariable;
+	BaseProcedurePtr  firstProcedure;
 
 	inline Declarations(
 			const ConstDeclPtr &firstConstant,
 			const UserTypeDeclPtr &firstType,
 			const VarDeclPtr &firstVariable,
-			const ProcedurePtr &firstProcedure)
+			const BaseProcedurePtr &firstProcedure)
 		: firstConstant(firstConstant),
 		  firstType(firstType),
 		  firstVariable(firstVariable),
@@ -237,6 +300,7 @@ struct Declarations : public Node {
 	{
 	}
 	void loadSymbols(SymbolTable &parent);
+	void loadTypes(SymbolTable &st);
 };
 
 struct IntExpr : public Expr {
@@ -404,7 +468,11 @@ struct AssignStmt : public Stmt {
 	}
 };
 
-struct Module : public Node {
+struct TypeContainer {
+	std::vector<TypePtr> declaredTypes;
+};
+
+struct Module : public Node, public TypeContainer {
 	SymbolTable      symbolTable;
 	TokenPtr         id0;
 	DeclarationsPtr  decls;
@@ -414,53 +482,75 @@ struct Module : public Node {
 			const TokenPtr &id0,
 			const DeclarationsPtr &decls,
 			const TokenPtr &id1)
-		: symbolTable(), id0(id0), decls(decls), id1(id1)
+		: Node(), TypeContainer(), symbolTable(),
+		  id0(id0), decls(decls), id1(id1)
 	{
 	}
 	void loadSymbols(const SymbolTable* builtins);
+	void loadTypes();
 };
 
 struct FParam : public Decl {
 	bool          isVar;
 	IdentPtr      firstIdent;
-	TokenPtr      type;
+	TokenPtr      typeName;
+	const Type*   type;
 	FParamPtr     next;
 
 	inline FParam(
 			bool isVar,
 			const IdentPtr &firstIdent,
-			const TokenPtr &type)
-		: isVar(isVar), firstIdent(firstIdent), type(type)
+			const TokenPtr &typeName)
+		: isVar(isVar), firstIdent(firstIdent),
+		  typeName(typeName), type(nullptr), next()
 	{
 	}
 	void loadSymbols(SymbolTable &st);
+	const Type* effectiveType() const override;
 };
 
-struct Procedure : public LValue {
-	SymbolTable      symbolTable;
-	TokenPtr         id0;
-	FParamPtr        firstFParam;
-	DeclarationsPtr  decls;
-	StmtPtr          firstStmt;
-	TokenPtr         id1;
-	ProcedurePtr     next;
+struct BaseProcedure : public LValue {
+	SymbolTable       symbolTable;
+	TokenPtr          id0;
+	FParamPtr         firstFParam;
+	DeclarationsPtr   decls;
+	StmtPtr           firstStmt;
+	TokenPtr          id1;
+	BaseProcedurePtr  next;
+
+	inline BaseProcedure(
+			const TokenPtr &id0,
+			const FParamPtr &firstFParam,
+			const DeclarationsPtr &decls,
+			const StmtPtr &firstStmt,
+			const TokenPtr &id1)
+		: LValue(), symbolTable(), id0(id0), decls(decls),
+		  firstStmt(firstStmt), id1(id1), next()
+	{
+	}
+	void loadSymbols(SymbolTable &parent);
+	void loadTypes();
+};
+
+struct Procedure : public BaseProcedure {
+	ProcedureType type;
 
 	inline Procedure(
 			const TokenPtr &id0,
 			const FParamPtr &firstFParam,
 			const DeclarationsPtr &decls,
 			const StmtPtr &firstStmt,
-			const TokenPtr &id1
-		)
-		: LValue(), symbolTable(), id0(id0), decls(decls),
-		  firstStmt(firstStmt), id1(id1), next()
+			const TokenPtr &id1)
+		: BaseProcedure(id0, firstFParam, decls, firstStmt, id1),
+		  type()
 	{
 	}
-	void loadSymbols(SymbolTable &parent);
+	const Type* effectiveType() const override;
 };
 
-struct Function : public Procedure {
-	TokenPtr resultType;
+struct Function : public BaseProcedure {
+	TokenPtr      resultType;
+	FunctionType  type;
 
 	inline Function(
 			const TokenPtr &id0,
@@ -470,10 +560,11 @@ struct Function : public Procedure {
 			const StmtPtr &firstStmt,
 			const TokenPtr &id1
 		)
-		: Procedure(id0, firstFParam, decls, firstStmt, id1),
-		  resultType(resultType)
+		: BaseProcedure(id0, firstFParam, decls, firstStmt, id1),
+		  resultType(resultType), type()
 	{
 	}
+	const Type* effectiveType() const override;
 };
 
 } // namespace frontend
