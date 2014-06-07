@@ -44,8 +44,8 @@ struct Semantic {
 	Result handleAppendProcDecl(
 		const Symbol &procdecl, const Symbol &procdecls)
 	{
-		auto first = std::dynamic_pointer_cast<Procedure>(procdecl.result());
-		auto second = std::dynamic_pointer_cast<Procedure>(procdecls.result());
+		auto first = std::dynamic_pointer_cast<BaseProcedure>(procdecl.result());
+		auto second = std::dynamic_pointer_cast<BaseProcedure>(procdecls.result());
 		first->next = second;
 		return first;
 	}

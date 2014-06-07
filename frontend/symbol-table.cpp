@@ -30,11 +30,11 @@ Decl* SymbolTable::lookup(const std::string &name) const {
 
 const Type* SymbolTable::lookupType(const std::string &name) const {
 	auto decl = lookup(name);
-	auto type = dynamic_cast<const Type*>(decl);
+	auto type = dynamic_cast<const TypeDecl*>(decl);
 	if (type == nullptr) {
 		throw NameError("no a type");
 	}
-	return type;
+	return type->effectiveType();
 }
 
 } // namespace frontend
