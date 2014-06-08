@@ -37,6 +37,7 @@ public:
 	void declare(const std::string &name, Decl *decl);
 	Decl* lookup(const std::string &name) const;
 	const Type* lookupType(const std::string &name) const;
+	Decl* lookupValue(const std::string &name) const;
 };
 
 } // namespace frontend

@@ -61,6 +61,7 @@ void run(std::istream &input) {
 	auto module = parse(input);
 	module->loadSymbols(&builtins);
 	module->loadTypes();
+	module->typeCheck();
 }
 
 } // namespace frontend

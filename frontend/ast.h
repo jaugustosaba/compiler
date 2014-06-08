@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "lexer.h"
-//#include "type-checker.h"
 #include "symbol-table.h"
 
 namespace frontend {
@@ -84,6 +83,17 @@ enum class BinOp {
 	Mod,
 	And,
 	Or
+};
+
+class TypeError : public std::exception {
+	std::string m_message;
+public:
+	inline TypeError(const std::string &message)
+		: m_message(message)
+	{
+	}
+	const char* what() const noexcept override;
+	~TypeError() noexcept override;
 };
 
 struct Type {
@@ -243,6 +253,7 @@ struct Expr : public Node {
 		: type(nullptr)
 	{
 	}
+	virtual void typeCheck(SymbolTable &st) = 0;
 };
 
 struct LValue : public Decl {
@@ -279,6 +290,7 @@ struct ConstDecl : public Decl {
 	{
 	}
 	void loadSymbols(SymbolTable &st);
+	void typeCheck(SymbolTable &st);
 	const Type* effectiveType() const override;
 };
 
@@ -301,6 +313,7 @@ struct Declarations : public Node {
 	}
 	void loadSymbols(SymbolTable &parent);
 	void loadTypes(SymbolTable &st);
+	void typeCheck(SymbolTable &st);
 };
 
 struct IntExpr : public Expr {
@@ -309,6 +322,7 @@ struct IntExpr : public Expr {
 	inline
 	IntExpr(const TokenPtr &value) : Expr(), value(value) {
 	}
+	void typeCheck(SymbolTable &st) override;
 };
 
 struct BinExpr : public Expr {
@@ -323,6 +337,7 @@ struct BinExpr : public Expr {
 		: Expr(), op(op), left(left), right(right)
 	{
 	}
+	void typeCheck(SymbolTable &st) override;
 };
 
 struct UnExpr : public Expr {
@@ -335,15 +350,18 @@ struct UnExpr : public Expr {
 		: Expr(), op(op), expr(expr)
 	{
 	}
+	void typeCheck(SymbolTable &st) override;
 };
 
 struct IdExpr : public Expr {
 	TokenPtr id;
+	Decl*    decl;
 
 	inline IdExpr(const TokenPtr &id)
-		: Expr(), id(id)
+		: Expr(), id(id), decl(nullptr)
 	{
 	}
+	void typeCheck(SymbolTable &st) override;
 };
 
 struct FieldExpr : public Expr {
@@ -356,6 +374,7 @@ struct FieldExpr : public Expr {
 		: Expr(), expr(expr), field(field)
 	{
 	}
+	void typeCheck(SymbolTable &st) override;
 };
 
 struct ExprList : public Node {
@@ -366,6 +385,7 @@ struct ExprList : public Node {
 		: expr(expr)
 	{
 	}
+	void typeCheck(SymbolTable &st);
 };
 
 struct CallExpr : public Expr {
@@ -376,6 +396,7 @@ struct CallExpr : public Expr {
 		: Expr(), lvalue(lvalue), firstExpr(firstExpr)
 	{
 	}
+	void typeCheck(SymbolTable &st) override;
 };
 
 struct DerefExpr : public Expr {
@@ -385,6 +406,7 @@ struct DerefExpr : public Expr {
 		: Expr(), lvalue(lvalue)
 	{
 	}
+	void typeCheck(SymbolTable &st) override;
 };
 
 struct IndexExpr : public Expr {
@@ -395,6 +417,7 @@ struct IndexExpr : public Expr {
 		: Expr(), lvalue(lvalue), firstExpr(firstExpr)
 	{
 	}
+	void typeCheck(SymbolTable &st) override;
 };
 
 struct Stmt : public Node {
@@ -402,6 +425,7 @@ struct Stmt : public Node {
 
 	inline Stmt() : next() {
 	}
+	virtual void typeCheck(SymbolTable &st) = 0;
 };
 
 struct Elseif : public Node {
@@ -411,10 +435,11 @@ struct Elseif : public Node {
 
 	inline Elseif(
 			const ExprPtr &expr,
-			const StmtPtr &firstStmt
-		) : expr(expr), firstStmt(firstStmt), next()
+			const StmtPtr &firstStmt)
+		: expr(expr), firstStmt(firstStmt), next()
 	{
 	}
+	void typeCheck(SymbolTable &st);
 };
 
 struct IfStmt : public Stmt {
@@ -435,6 +460,7 @@ struct IfStmt : public Stmt {
 		  firstElseStmt(firstElseStmt)
 	{
 	}
+	void typeCheck(SymbolTable &st) override;
 };
 
 struct WhileStmt : public Stmt {
@@ -445,6 +471,7 @@ struct WhileStmt : public Stmt {
 		: Stmt(), expr(expr), firstStmt(firstStmt)
 	{
 	}
+	void typeCheck(SymbolTable &st) override;
 };
 
 struct CallStmt : public Stmt {
@@ -454,6 +481,7 @@ struct CallStmt : public Stmt {
 		: expr(expr)
 	{
 	}
+	void typeCheck(SymbolTable &st) override;
 };
 
 struct AssignStmt : public Stmt {
@@ -466,6 +494,7 @@ struct AssignStmt : public Stmt {
 		: lvalue(lvalue), rvalue(rvalue)
 	{
 	}
+	void typeCheck(SymbolTable &st) override;
 };
 
 struct TypeContainer {
@@ -488,6 +517,7 @@ struct Module : public Node, public TypeContainer {
 	}
 	void loadSymbols(const SymbolTable* builtins);
 	void loadTypes();
+	void typeCheck();
 };
 
 struct FParam : public Decl {
@@ -506,6 +536,7 @@ struct FParam : public Decl {
 	{
 	}
 	void loadSymbols(SymbolTable &st);
+	void loadTypes(SymbolTable &st);
 	const Type* effectiveType() const override;
 };
 
@@ -524,12 +555,14 @@ struct BaseProcedure : public LValue {
 			const DeclarationsPtr &decls,
 			const StmtPtr &firstStmt,
 			const TokenPtr &id1)
-		: LValue(), symbolTable(), id0(id0), decls(decls),
+		: LValue(), symbolTable(), id0(id0),
+		  firstFParam(firstFParam), decls(decls),
 		  firstStmt(firstStmt), id1(id1), next()
 	{
 	}
 	void loadSymbols(SymbolTable &parent);
 	void loadTypes();
+	virtual void typeCheck();
 };
 
 struct Procedure : public BaseProcedure {
