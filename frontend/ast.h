@@ -22,18 +22,19 @@ struct ArrayDescriptor;
 struct PointerDescriptor;
 struct UserTypeDecl;
 struct Expr;
+struct Designator;
 struct VarDecl;
 struct ConstDecl;
 struct Declarations;
 struct IntExpr;
 struct BinExpr;
 struct UnExpr;
-struct IdExpr;
-struct FieldExpr;
+struct IdDesig;
+struct FieldDesig;
 struct ExprList;
-struct CallExpr;
-struct DerefExpr;
-struct IndexExpr;
+struct IdExpr;
+struct DerefDesig;
+struct IndexDesig;
 struct Stmt;
 struct Elseif;
 struct IfStmt;
@@ -54,6 +55,7 @@ typedef std::shared_ptr<Field> FieldPtr;
 typedef std::shared_ptr<RecordDescriptor> RecordDescriptorPtr;
 typedef std::shared_ptr<UserTypeDecl> UserTypeDeclPtr;
 typedef std::shared_ptr<Expr> ExprPtr;
+typedef std::shared_ptr<Designator> DesignatorPtr;
 typedef std::shared_ptr<VarDecl> VarDeclPtr;
 typedef std::shared_ptr<ConstDecl> ConstDeclPtr;
 typedef std::shared_ptr<Declarations> DeclarationsPtr;
@@ -275,6 +277,7 @@ struct VarDecl : public LValue {
 	}
 	const Type* effectiveType() const override;
 	void loadSymbols(SymbolTable &st);
+	void loadTypes(SymbolTable &st);
 };
 
 struct ConstDecl : public Decl {
@@ -325,6 +328,15 @@ struct IntExpr : public Expr {
 	void typeCheck(SymbolTable &st) override;
 };
 
+struct BoolExpr : public Expr {
+	bool value;
+
+	inline
+	BoolExpr(bool value) : Expr(), value(value) {
+	}
+	void typeCheck(SymbolTable &st) override;
+};
+
 struct BinExpr : public Expr {
 	BinOp    op;
 	ExprPtr  left;
@@ -353,25 +365,32 @@ struct UnExpr : public Expr {
 	void typeCheck(SymbolTable &st) override;
 };
 
-struct IdExpr : public Expr {
+struct Designator : public Node {
+	const Type* type;
+	virtual void typeCheck(SymbolTable &st) = 0;
+	virtual bool isUpdatable() const;
+};
+
+struct IdDesig : public Designator {
 	TokenPtr id;
 	Decl*    decl;
 
-	inline IdExpr(const TokenPtr &id)
-		: Expr(), id(id), decl(nullptr)
+	inline IdDesig(const TokenPtr &id)
+		: Designator(), id(id), decl(nullptr)
 	{
 	}
 	void typeCheck(SymbolTable &st) override;
+	bool isUpdatable() const override;
 };
 
-struct FieldExpr : public Expr {
-	ExprPtr expr;
-	TokenPtr field;
+struct FieldDesig : public Designator {
+	DesignatorPtr  designator;
+	TokenPtr       field;
 
-	inline FieldExpr(
-			const ExprPtr &expr,
+	inline FieldDesig(
+			const DesignatorPtr &designator,
 			const TokenPtr &field)
-		: Expr(), expr(expr), field(field)
+		: Designator(), designator(designator), field(field)
 	{
 	}
 	void typeCheck(SymbolTable &st) override;
@@ -388,33 +407,22 @@ struct ExprList : public Node {
 	void typeCheck(SymbolTable &st);
 };
 
-struct CallExpr : public Expr {
-	ExprPtr      lvalue;
-	ExprListPtr  firstExpr;
+struct DerefDesig : public Designator {
+	DesignatorPtr designator;
 
-	inline CallExpr(const ExprPtr &lvalue, const ExprListPtr &firstExpr)
-		: Expr(), lvalue(lvalue), firstExpr(firstExpr)
+	inline DerefDesig(const DesignatorPtr &designator)
+		: Designator(), designator(designator)
 	{
 	}
 	void typeCheck(SymbolTable &st) override;
 };
 
-struct DerefExpr : public Expr {
-	ExprPtr lvalue;
+struct IndexDesig : public Designator {
+	DesignatorPtr  designator;
+	ExprListPtr    firstExpr;
 
-	inline DerefExpr(const ExprPtr &lvalue)
-		: Expr(), lvalue(lvalue)
-	{
-	}
-	void typeCheck(SymbolTable &st) override;
-};
-
-struct IndexExpr : public Expr {
-	ExprPtr      lvalue;
-	ExprListPtr  firstExpr;
-
-	inline IndexExpr(const ExprPtr &lvalue, const ExprListPtr &firstExpr)
-		: Expr(), lvalue(lvalue), firstExpr(firstExpr)
+	inline IndexDesig(const DesignatorPtr &designator, const ExprListPtr &firstExpr)
+		: Designator(), designator(designator), firstExpr(firstExpr)
 	{
 	}
 	void typeCheck(SymbolTable &st) override;
@@ -463,6 +471,17 @@ struct IfStmt : public Stmt {
 	void typeCheck(SymbolTable &st) override;
 };
 
+struct IdExpr : public Expr {
+	DesignatorPtr  designator;
+	ExprListPtr    firstExpr;
+
+	inline IdExpr(const DesignatorPtr &designator, const ExprListPtr &firstExpr)
+		: Expr(), designator(designator), firstExpr(firstExpr)
+	{
+	}
+	void typeCheck(SymbolTable &st) override;
+};
+
 struct WhileStmt : public Stmt {
 	ExprPtr  expr;
 	StmtPtr  firstStmt;
@@ -475,23 +494,22 @@ struct WhileStmt : public Stmt {
 };
 
 struct CallStmt : public Stmt {
-	ExprPtr  expr;
+	DesignatorPtr  designator;
+	ExprListPtr    aparams;
 
-	inline CallStmt(const ExprPtr &expr)
-		: expr(expr)
+	inline CallStmt(const DesignatorPtr &designator, const ExprListPtr &aparams)
+		: designator(designator), aparams(aparams)
 	{
 	}
 	void typeCheck(SymbolTable &st) override;
 };
 
 struct AssignStmt : public Stmt {
-	ExprPtr  lvalue;
-	ExprPtr  rvalue;
+	DesignatorPtr  designator;
+	ExprPtr        expr;
 
-	inline AssignStmt(
-			const ExprPtr &lvalue,
-			const ExprPtr &rvalue)
-		: lvalue(lvalue), rvalue(rvalue)
+	inline AssignStmt(const DesignatorPtr &designator, const ExprPtr &expr)
+		: designator(designator), expr(expr)
 	{
 	}
 	void typeCheck(SymbolTable &st) override;
@@ -505,14 +523,16 @@ struct Module : public Node, public TypeContainer {
 	SymbolTable      symbolTable;
 	TokenPtr         id0;
 	DeclarationsPtr  decls;
+	StmtPtr          firstStmt;
 	TokenPtr         id1;
 
 	inline Module(
 			const TokenPtr &id0,
 			const DeclarationsPtr &decls,
+			const StmtPtr &firstStmt,
 			const TokenPtr &id1)
 		: Node(), TypeContainer(), symbolTable(),
-		  id0(id0), decls(decls), id1(id1)
+		  id0(id0), decls(decls), firstStmt(firstStmt), id1(id1)
 	{
 	}
 	void loadSymbols(const SymbolTable* builtins);
@@ -561,7 +581,7 @@ struct BaseProcedure : public LValue {
 	{
 	}
 	void loadSymbols(SymbolTable &parent);
-	void loadTypes();
+	virtual void loadTypes(SymbolTable &st);
 	virtual void typeCheck();
 };
 
@@ -578,6 +598,7 @@ struct Procedure : public BaseProcedure {
 		  type()
 	{
 	}
+	void loadTypes(SymbolTable &st) override;
 	const Type* effectiveType() const override;
 };
 
@@ -597,6 +618,7 @@ struct Function : public BaseProcedure {
 		  resultType(resultType), type()
 	{
 	}
+	void loadTypes(SymbolTable &st) override;
 	const Type* effectiveType() const override;
 };
 

@@ -18,7 +18,8 @@ struct Semantic {
 			const Symbol &END, const Symbol &ID1, const Symbol &SEMI1)
 	{
 		auto decls1 = std::dynamic_pointer_cast<Declarations>(decls0.result());
-		return NodePtr(new Module(ID0.token(), decls1, ID1.token()));
+		auto firstStmt = std::dynamic_pointer_cast<Stmt>(optStmts.result());
+		return NodePtr(new Module(ID0.token(), decls1, firstStmt, ID1.token()));
 	}
 
 	inline
@@ -361,9 +362,9 @@ struct Semantic {
 	}
 
 	inline
-	Result handleFieldExpr(const Symbol &expr, const Symbol &DOT, const Symbol &ID) {
-		auto expr1 = std::dynamic_pointer_cast<Expr>(expr.result());
-		return NodePtr(new FieldExpr(expr1, ID.token()));
+	Result handleFieldDesig(const Symbol &designator, const Symbol &DOT, const Symbol &ID) {
+		auto desig = std::dynamic_pointer_cast<Designator>(designator.result());
+		return NodePtr(new FieldDesig(desig, ID.token()));
 	}
 
 	inline
@@ -372,8 +373,15 @@ struct Semantic {
 	}
 
 	inline
-	Result handleIdExpr(const Symbol &ID) {
-		return NodePtr(new IdExpr(ID.token()));
+	Result handleIdExpr(const Symbol &designator, const Symbol &aparams) {
+		auto desig = std::dynamic_pointer_cast<Designator>(designator.result());
+		auto firstExpr = std::dynamic_pointer_cast<ExprList>(aparams.result());
+		return NodePtr(new IdExpr(desig, firstExpr));
+	}
+
+	inline
+	Result handleIdDesig(const Symbol &ID) {
+		return NodePtr(new IdDesig(ID.token()));
 	}
 
 	inline
@@ -382,20 +390,19 @@ struct Semantic {
 	}
 
 	inline
-	Result handleCallOrAssignStmt(const Symbol &expr, const Symbol &optassign) {
-		auto lvalue = std::dynamic_pointer_cast<Expr>(expr.result());
-		auto rvalue = std::dynamic_pointer_cast<Expr>(optassign.result());
-		if (rvalue.get() == nullptr) {
-			return NodePtr(new CallStmt(lvalue));
-		}
-		return NodePtr(new AssignStmt(lvalue, rvalue));
+	Result handleAssignStmt(
+			const Symbol &designator, const Symbol &ASSIGN, const Symbol &expr)
+	{
+		auto desig = std::dynamic_pointer_cast<Designator>(designator.result());
+		auto expr1 = std::dynamic_pointer_cast<Expr>(expr.result());
+		return NodePtr(new AssignStmt(desig, expr1));
 	}
 
 	inline
-	Result handleCallExpr(const Symbol &expr, const Symbol &aparams) {
-		auto lvalue = std::dynamic_pointer_cast<Expr>(expr.result());
-		auto fistAParam = std::dynamic_pointer_cast<ExprList>(aparams.result());
-		return NodePtr(new CallExpr(lvalue, fistAParam));
+	Result handleCallStmt(const Symbol &designator, const Symbol &aparams) {
+		auto desig = std::dynamic_pointer_cast<Designator>(designator.result());
+		auto firstExpr = std::dynamic_pointer_cast<ExprList>(aparams.result());
+		return NodePtr(new CallStmt(desig, firstExpr));
 	}
 
 	inline
@@ -441,19 +448,19 @@ struct Semantic {
 	}
 
 	inline
-	Result handleDerefExpr(const Symbol &expr, const Symbol &DEREF) {
-		auto lvalue = std::dynamic_pointer_cast<Expr>(expr.result());
-		return NodePtr(new DerefExpr(lvalue));
+	Result handleDerefDesig(const Symbol &designator, const Symbol &DEREF) {
+		auto desig = std::dynamic_pointer_cast<Designator>(designator.result());
+		return NodePtr(new DerefDesig(desig));
 	}
 
 	inline
-	Result handleIndexExpr(
-			const Symbol &expr, const Symbol &LSQUARE,
+	Result handleIndexDesig(
+			const Symbol &designator, const Symbol &LSQUARE,
 			const Symbol &exprlist, const Symbol &RSQUARE)
 	{
-		auto lvalue = std::dynamic_pointer_cast<Expr>(expr.result());
+		auto desig = std::dynamic_pointer_cast<Designator>(designator.result());
 		auto firstExpr = std::dynamic_pointer_cast<ExprList>(exprlist.result());
-		return NodePtr(new IndexExpr(lvalue, firstExpr));
+		return NodePtr(new IndexDesig(desig, firstExpr));
 	}
 
 	inline
@@ -476,6 +483,16 @@ struct Semantic {
 	{
 		auto expr0 = std::dynamic_pointer_cast<Expr>(expr.result());
 		return NodePtr(new ConstDecl(ID.token(), expr0));
+	}
+
+	inline
+	Result handleTrue(const Symbol &TRUE) {
+		return NodePtr(new BoolExpr(true));
+	}
+
+	inline
+	Result handleFalse(const Symbol &FALSE) {
+		return NodePtr(new BoolExpr(false));
 	}
 };
 

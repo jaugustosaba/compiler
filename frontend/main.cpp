@@ -5,48 +5,46 @@
 
 const char* INPUT = R"(
 module m;
-  const
-    X = 10;
-    Y = X + 1;
   type
-    zica = 
-      record
-        a, b : boolean;
-        c : integer;
-      end ;
-    pzica = pointer to zica;
-    azica = array 10, 20 of pzica;
-
+    X = record
+          x, y : integer;
+        end;
+    Y = pointer to X;
   var
-    a, k, l : integer;
-    b : real;
+    x : X;
+    p : Y;
+    res : integer;
 
-  procedure x();
+  procedure add(x, y : integer; var res : integer);
   begin
-    if (a+b+c > b) or not k then
-    elseif b <> c then
-      if l = m then
-      end;
-    elseif k = y then
-      while d do
-      end;
-    else
-    end;
-  end x;
+    res := x + y;
+  end add;
 
-  function y(a, b : integer; var c:integer) : integer;
-    var k : integer;
+  function f(var x : X) : boolean;
+    var result : boolean;
   begin
-    k := a + b + c;
-    y := 20;
-    y;
-    l := m() + n.k.l();
-    while k().x do
-      k[i, j] = a[l][m]^.value;
-    end;
-  end y;
+    result := (x.x = x.y);
+  end f;
+
+  function dup(var x : integer) : integer;
+  begin
+    
+  end dup;
+
+  function zica : Y;
+  begin
+  end zica;
 
 begin
+  x.x := 10;
+  x.y := 20;
+  add(x.x, x.y, res);
+  f(x);
+  dup(res);
+  p := zica;
+  p^.x := 11;
+  p^.y := 21;
+  f(p^);
 end m;
 )";
 

@@ -148,6 +148,12 @@ struct Semantic {
 	inline void constt(const std::string &lexeme) {
 		result = newToken(TokenType::CONST, lexeme);
 	}
+	inline void truee(const std::string &lexeme) {
+		result = newToken(TokenType::TRUE, lexeme);
+	}
+	inline void falsee(const std::string &lexeme) {
+		result = newToken(TokenType::FALSE, lexeme);
+	}
 private:
 	inline TokenPtr newToken(TokenType type, const std::string &lexeme) {
 		TokenPtr ptr(new Token(type, lexeme, start, input.position()));
