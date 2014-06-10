@@ -82,13 +82,7 @@ private:
         m_out.increaseIdent();
         const auto &tokens = m_table.tokens;
         for (size_t token=0; token < tokens.size(); ++token) {
-            const auto &tokenName = tokens[token];
-            if (tokenName.empty()) {
-                m_out << "Eof";
-            } else {
-                m_out << tokenName;
-            }
-            m_out << " = " << token << "," << endl;
+            m_out << tokens[token] << " = " << token << "," << endl;
         }
         m_out.decreaseIdent();
         m_out << "};" << endl << endl;
@@ -205,6 +199,7 @@ private:
         m_out << "Lexer&     m_lexer;" << endl;
         m_out << "Semantic&  m_semantic;" << endl;
         m_out << "Stack      m_stack;" << endl << endl;
+        generateRaiseError();
         generateReduce();
         m_out.decreaseIdent();
         m_out << "};" << endl;
@@ -260,7 +255,7 @@ private:
         m_out.decreaseIdent();
         m_out << "case ActionType::Error:" << endl;
         m_out.increaseIdent();
-        m_out << "throw SyntaxError();" << endl;
+        m_out << "raiseError();" << endl;
         m_out.decreaseIdent();
         m_out.decreaseIdent();
         m_out << "}" << endl;
@@ -270,6 +265,45 @@ private:
         m_out.decreaseIdent();
         m_out << "}" << endl << endl;
     }
+
+    void generateRaiseError() {
+    	m_out << "void raiseError() {" << endl;
+    	m_out.increaseIdent();
+    	m_out << "while (!m_stack.empty()) {" << endl;
+    	m_out.increaseIdent();
+    	m_out << "const auto &state = m_stack.top();" << endl;
+    	m_out << "const auto &action = getAction(state.id, TokenType::ERROR);" << endl;
+    	m_out << "if (action.type == ActionType::Shift) {" << endl;
+    	m_out.increaseIdent();
+    	m_out << "m_stack.emplace(action.value, Token());" << endl;
+    	m_out << "break;" << endl;
+    	m_out.decreaseIdent();
+    	m_out << "} else {" << endl;
+    	m_out.increaseIdent();
+    	m_out << "m_stack.pop();" << endl;
+    	m_out.decreaseIdent();
+    	m_out << "}" << endl;
+    	m_out.decreaseIdent();
+    	m_out << "}" << endl;
+    	m_out << "if (m_stack.empty()) {" << endl;
+    	m_out.increaseIdent();
+    	m_out << "throw SyntaxError();" << endl;
+    	m_out.decreaseIdent();
+    	m_out << "}" << endl;
+    	m_out << "while (getAction(m_stack.top().id, m_lexer.peek()).type == ActionType::Error) {" << endl;
+    	m_out.increaseIdent();
+    	m_out << "if (m_lexer.peek() == TokenType::EOFF) {" << endl;
+    	m_out.increaseIdent();
+    	m_out << "break;" << endl;
+    	m_out.decreaseIdent();
+    	m_out << "}" << endl;
+    	m_out << "m_lexer.next();" << endl;
+    	m_out.decreaseIdent();
+    	m_out << "}" << endl;
+    	m_out.decreaseIdent();
+    	m_out << "}" << endl << endl;
+    }
+
     void generateReduce() {
         m_out << "Reduction reduce(size_t reduction) {" << endl;
         m_out.increaseIdent();

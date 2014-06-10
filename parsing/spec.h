@@ -68,6 +68,7 @@ struct Options {
 struct Spec {
 	Rule*                  root;
 	Token*                 eof;
+	Token*                 error;
 	std::vector<RulePtr>   rules;
 	std::vector<TokenPtr>  tokens;
 	Options                options;

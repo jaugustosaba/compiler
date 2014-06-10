@@ -183,7 +183,7 @@ void Lexer::next() {
 	if (actionTriggered) {
 		m_buffer = semantic.result;
 	} else {
-		m_buffer = TokenPtr(new Token(TokenType::Eof, "", m_input.position(), m_input.position()));
+		m_buffer = TokenPtr(new Token(TokenType::EOFF, "", m_input.position(), m_input.position()));
 	}
 }
 

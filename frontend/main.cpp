@@ -28,7 +28,7 @@ module m;
 
   function dup(var x : integer) : integer;
   begin
-    
+    x := 2 * x;
   end dup;
 
   function zica : Y;

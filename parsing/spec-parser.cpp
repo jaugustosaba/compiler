@@ -336,25 +336,15 @@ private:
 };
 
 class SpecBuilder {
-
-	struct Hasher {
-		size_t operator()(const TkPtr &token) const {
-			std::hash<std::string> h;
-			return h(token->lexeme);
-		}
-	};
-
-	struct Comparator {
-		bool operator()(const TkPtr &t1, const TkPtr &t2) const {
-			return t1->lexeme == t2->lexeme;
-		}
+	struct SymbolDecl {
+		Tk       tk;
+		Symbol*  symbol;
+		bool     special;
 	};
 
     typedef std::unordered_map<
-    		TkPtr,
-    		Symbol*,
-    		Hasher,
-    		Comparator
+    		std::string,
+    		SymbolDecl
     > SymbolMap;
 
     const RawSpec&  m_rawSpec;
@@ -367,11 +357,21 @@ public:
     {
     }
     void build() {
+    	loadBuiltinSymbols();
         processOptions();
         processRules();
         checkRoot();
     }
 private:
+    void loadBuiltinSymbols() {
+    	auto &eofDecl = m_symbolMap[m_spec.eof->name];
+    	eofDecl.special = true;
+    	eofDecl.symbol = m_spec.eof;
+
+    	auto &errorDecl = m_symbolMap[m_spec.error->name];
+    	errorDecl.special = true;
+    	errorDecl.symbol = m_spec.error;
+    }
     void processOptions() {
     	int priority = 1;
         for (const auto &option : m_rawSpec.options) {
@@ -415,12 +415,16 @@ private:
     }
     void processTokenOpt(const RawOptionPtr &option, Associativity assoc, int priority) {
         for (auto &tk : option->params) {
-        	auto it = m_symbolMap.find(tk);
+        	auto it = m_symbolMap.find(tk->lexeme);
         	if (it != m_symbolMap.end()) {
         		std::ostringstream out;
-        		out << "symbol '" << tk->lexeme
-        			<< "' already declared at (" << it->first->line
-        			<< ", " << it->first->column << ")";
+        		out << "symbol '" << tk->lexeme << "'";
+        		if (it->second.special) {
+        			out << " is a special symbol, cannot be redeclared";
+        		} else {
+    				out << " already declared at (" << it->second.tk.line
+    					<< ", " << it->second.tk.column << ")";
+        		}
         		throw SpecError(out.str(), tk->line, tk->column);
         	}
         	TokenPtr ptr(new Token);
@@ -428,7 +432,9 @@ private:
         	ptr->name = tk->lexeme;
         	ptr->priority = priority;
         	ptr->assoc = assoc;
-        	m_symbolMap[TkPtr(new Tk(*tk))] = ptr.get();
+        	auto &decl = m_symbolMap[tk->lexeme];
+        	decl.tk = *tk;
+        	decl.symbol = ptr.get();
         	m_spec.tokens.push_back(std::move(ptr));
         }
     }
@@ -444,24 +450,30 @@ private:
         const auto &rules = m_rawSpec.rules;
         for (const auto &rule : rules) {
             auto &name = rule->name;
-            auto it = m_symbolMap.find(name);
+            auto it = m_symbolMap.find(name->lexeme);
             if (it != m_symbolMap.end()) {
                 std::ostringstream out;
                 out << "'" << name->lexeme << "' already declared as ";
-                if (dynamic_cast<Rule*>(it->second) != nullptr) {
+                if (dynamic_cast<Rule*>(it->second.symbol) != nullptr) {
                     out << "rule";
                 } else {
                     out << "token";
                 }
-                int l = it->first->line;
-                int c = it->first->column;
-                out << " at (" << l << ", " << c << ")";
+                if (it->second.special) {
+                	out << " (special)";
+                } else {
+					int l = it->second.tk.line;
+					int c = it->second.tk.column;
+					out << " at (" << l << ", " << c << ")";
+                }
                 throw SpecError(out.str(), name->line, name->column);
             }
             RulePtr ptr(new Rule{});
             ptr->id = m_spec.rules.size();
             ptr->name = name->lexeme;
-            m_symbolMap[TkPtr(new Tk(*name))] = ptr.get();
+            auto &decl = m_symbolMap[name->lexeme];
+            decl.tk = *name;
+            decl.symbol = ptr.get();
             m_spec.rules.push_back(std::move(ptr));
         }
         for (const auto &rule : rules) {
@@ -469,20 +481,20 @@ private:
         }
     }
     void processRule(const RawRulePtr &rule) {
-    	auto it1 = m_symbolMap.find(rule->name);
-    	auto specRule = dynamic_cast<Rule*>(it1->second);
+    	auto it1 = m_symbolMap.find(rule->name->lexeme);
+    	auto specRule = dynamic_cast<Rule*>(it1->second.symbol);
         for (const auto &prod : rule->productions) {
         	ProductionPtr specProd(new Production{});
         	specProd->rule = specRule;
             for (const auto &symbol : prod->symbols) {
-                auto it2 = m_symbolMap.find(symbol);
+                auto it2 = m_symbolMap.find(symbol->lexeme);
                 if (it2 == m_symbolMap.end()) {
                     std::ostringstream out;
                     out << "unknown rule or token '"
                         << symbol->lexeme << "'";
                     throw SpecError(out.str(), symbol->line, symbol->column);
                 }
-                specProd->symbols.push_back(it2->second);
+                specProd->symbols.push_back(it2->second.symbol);
             }
             if (prod->action != nullptr) {
             	specProd->action = prod->action->lexeme;
@@ -496,13 +508,13 @@ private:
         	PosType column = 0;
             throw SpecError("no root defined", line, column);
         }
-        auto it = m_symbolMap.find(m_root);
+        auto it = m_symbolMap.find(m_root->lexeme);
         if (it == m_symbolMap.end()) {
             std::ostringstream out;
             out << "no rule named '" << m_root->lexeme << "' to be root";
             throw SpecError(out.str(), m_root->line, m_root->column);
         }
-        m_spec.root = dynamic_cast<Rule*>(it->second);
+        m_spec.root = dynamic_cast<Rule*>(it->second.symbol);
         if (m_spec.root == nullptr) {
             std::ostringstream out;
             out << "'" << m_root->lexeme << "' must be rule not token";
@@ -511,21 +523,26 @@ private:
     }
 };
 
-void createEofToken(Spec &spec) {
+Token* createSpecialToken(Spec &spec, const std::string &name) {
 	TokenPtr ptr(new Token{});
-	ptr->id = 0;
-	ptr->name = "Eof";
+	ptr->id = spec.tokens.size();
+	ptr->name = name;
 	ptr->priority = 0;
 	ptr->assoc = Associativity::Left;
-	spec.eof = ptr.get();
 	spec.tokens.push_back(std::move(ptr));
+	return spec.tokens.back().get();
+}
+
+void createSpecialTokens(Spec &spec) {
+	spec.eof = createSpecialToken(spec, "EOFF");
+	spec.error = createSpecialToken(spec, "ERROR");
 }
 
 } // anonymous namespace
 
 Spec parse(std::istream &input) {
 	Spec rs;
-	createEofToken(rs);
+	createSpecialTokens(rs);
 	Parser parser(input);
 	RawSpec rawSpec = parser.parse();
 	SpecBuilder builder(rawSpec, rs);
