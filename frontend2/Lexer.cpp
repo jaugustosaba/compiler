@@ -74,24 +74,25 @@ void Lexer::next() {
 		c = peekChar();
 	}
 	m_lexeme.clear();
+	m_from = m_to;
 	switch (c) {
 	case -1:
-		m_buffer = TokenType::Eof;
+		m_tt = TokenType::Eof;
 		break;
 	case ';':
-		m_buffer = TokenType::Semi;
+		m_tt = TokenType::Semi;
 		nextChar();
 		break;
 	case '.':
-		m_buffer = TokenType::Dot;
+		m_tt = TokenType::Dot;
 		nextChar();
 		break;
 	case ',':
-		m_buffer = TokenType::Comma;
+		m_tt = TokenType::Comma;
 		nextChar();
 		break;
 	case '=':
-		m_buffer = TokenType::Eq;
+		m_tt = TokenType::Eq;
 		nextChar();
 		break;
 	case '<':
@@ -99,12 +100,12 @@ void Lexer::next() {
 		c = peekChar();
 		if (c == '>') {
 			nextChar();
-			m_buffer = TokenType::Ne;
+			m_tt = TokenType::Ne;
 		} else if (c == '=') {
 			nextChar();
-			m_buffer = TokenType::Le;
+			m_tt = TokenType::Le;
 		} else {
-			m_buffer = TokenType::Lt;
+			m_tt = TokenType::Lt;
 		}
 		break;
 	case '>':
@@ -112,9 +113,9 @@ void Lexer::next() {
 		c = peekChar();
 		if (c == '=') {
 			nextChar();
-			m_buffer = TokenType::Ge;
+			m_tt = TokenType::Ge;
 		} else {
-			m_buffer = TokenType::Gt;
+			m_tt = TokenType::Gt;
 		}
 		break;
 	case ':':
@@ -122,33 +123,33 @@ void Lexer::next() {
 		c = peekChar();
 		if (c == '=') {
 			nextChar();
-			m_buffer = TokenType::Assign;
+			m_tt = TokenType::Assign;
 		} else {
-			m_buffer = TokenType::Colon;
+			m_tt = TokenType::Colon;
 		}
 		break;
 	case '(':
-		m_buffer = TokenType::LParen;
+		m_tt = TokenType::LParen;
 		nextChar();
 		break;
 	case ')':
-		m_buffer = TokenType::RParen;
+		m_tt = TokenType::RParen;
 		nextChar();
 		break;
 	case '+':
-		m_buffer = TokenType::Add;
+		m_tt = TokenType::Add;
 		nextChar();
 		break;
 	case '-':
-		m_buffer = TokenType::Sub;
+		m_tt = TokenType::Sub;
 		nextChar();
 		break;
 	case '*':
-		m_buffer = TokenType::Mul;
+		m_tt = TokenType::Mul;
 		nextChar();
 		break;
 	case '/':
-		m_buffer = TokenType::RealDiv;
+		m_tt = TokenType::RealDiv;
 		nextChar();
 		break;
 	default:
@@ -158,6 +159,7 @@ void Lexer::next() {
 			lexId();
 		}
 	}
+	m_to = Position(m_line, m_column, m_input.tellg());
 }
 
 void Lexer::lexId() {
@@ -175,8 +177,8 @@ void Lexer::lexId() {
 		c = peekChar();
 	}
 	auto lexeme = sstr.str();
-	m_buffer = lookupKeyword(lexeme);
-	if (m_buffer == TokenType::Id) {
+	m_tt = lookupKeyword(lexeme);
+	if (m_tt == TokenType::Id) {
 		m_lexeme = lexeme;
 	}
 }
@@ -190,7 +192,7 @@ void Lexer::lexInt() {
 		c = peekChar();
 	}
 	m_lexeme = sstr.str();
-	m_buffer = TokenType::Int;
+	m_tt = TokenType::Int;
 }
 
 } // namespace frontend

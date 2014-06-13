@@ -1,9 +1,18 @@
 #ifndef PARSER_H_
 #define PARSER_H_
 
+#include <vector>
+#include <memory>
+
 #include "Lexer.h"
 
 namespace frontend {
+
+class Ident;
+struct Module;
+struct Decls;
+struct Var;
+struct Procedure;
 
 class SyntaxError : public std::exception {
 public:
@@ -22,11 +31,12 @@ public:
 	}
 	void parse();
 private:
-	void parseModule();
-	void parseDecls();
-	void parseVars();
+	std::unique_ptr<Module> parseModule();
+	void parseIdent(Ident &ident);
+	void parseDecls(Decls &decls);
+	void parseVars(std::vector<std::unique_ptr<Var>> &vars);
 	void parseIdentList();
-	void parseProcs();
+	void parseProcs(std::vector<std::unique_ptr<Procedure>> &procs);
 	void parseFParams();
 	void parseFParam();
 	void parseStmts();

@@ -1,4 +1,9 @@
 #include "Parser.h"
+#include "Ident.h"
+#include "Module.h"
+#include "Decls.h"
+#include "Var.h"
+#include "Procedure.h"
 
 namespace frontend {
 
@@ -14,26 +19,41 @@ void Parser::parse() {
 	parseModule();
 }
 
-void Parser::parseModule() {
+std::unique_ptr<Module> Parser::parseModule() {
+	std::unique_ptr<Module> module(new Module());
 	consume(TokenType::Module);
-	consume(TokenType::Id);
+	parseIdent(module->id);
 	consume(TokenType::Semi);
-	parseDecls();
+	parseDecls(module->decls);
 	if (m_lexer.peek() == TokenType::Begin) {
 		m_lexer.next();
 		parseStmts();
 	}
 	consume(TokenType::End);
-	consume(TokenType::Id);
+	Ident id;
+	parseIdent(id);
+	if (module->id.text.compare(id.text)) {
+
+	}
 	consume(TokenType::Dot);
+	return module;
 }
 
-void Parser::parseDecls() {
-	parseVars();
-	parseProcs();
+void Parser::parseIdent(Ident &ident) {
+	if (m_lexer.peek() != TokenType::Id) {
+		syntaxError({TokenType::Id});
+	}
+	ident.from = m_lexer.from();
+	ident.to = m_lexer.to();
+	ident.text = m_lexer.lexeme();
 }
 
-void Parser::parseVars() {
+void Parser::parseDecls(Decls &decls) {
+	parseVars(decls.vars);
+	parseProcs(decls.procedures);
+}
+
+void Parser::parseVars(std::vector<std::unique_ptr<Var>> &vars) {
 	while (m_lexer.peek() == TokenType::Var) {
 		m_lexer.next();
 		while (m_lexer.peek() == TokenType::Id) {
@@ -53,10 +73,11 @@ void Parser::parseIdentList() {
 	}
 }
 
-void Parser::parseProcs() {
+void Parser::parseProcs(std::vector<std::unique_ptr<Procedure>> &procs) {
 	while (m_lexer.peek() == TokenType::Procedure) {
 		m_lexer.next();
-		consume(TokenType::Id);
+		std::unique_ptr<Procedure> procedure(new Procedure());
+		parseIdent(procedure->id);
 		if (m_lexer.peek() == TokenType::LParen) {
 			m_lexer.next();
 			parseFParams();
@@ -70,7 +91,7 @@ void Parser::parseProcs() {
 		if ((m_lexer.peek() != TokenType::Procedure)
 			&& (m_lexer.peek() != TokenType::End))
 		{
-			parseDecls();
+			parseDecls(procedure->decls);
 			consume(TokenType::Begin);
 			parseStmts();
 			consume(TokenType::End);
