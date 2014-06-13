@@ -1,19 +1,24 @@
 #ifndef PROCEDURE_H_
 #define PROCEDURE_H_
 
-#include "Decls.h"
+#include "Node.h"
 #include "Ident.h"
+#include "Decls.h"
 
 namespace frontend {
 
-struct Procedure {
-	Ident id;
-	Decls decls;
+struct FParam;
 
-	inline Procedure()
-		: id(), decls()
-	{
-	}
+struct Procedure : public Node {
+	typedef std::unique_ptr<FParam> FParamPtr;
+	typedef std::vector<FParamPtr> FParamVect;
+
+	Ident       id;
+	FParamVect  fparams;
+	Decls       decls;
+
+	Procedure();
+	~Procedure();
 };
 
 } // namespace frontend

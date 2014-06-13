@@ -4,19 +4,25 @@
 #include <vector>
 #include <memory>
 
+#include "Node.h"
+
 namespace frontend {
 
 struct Var;
 struct Procedure;
 
-struct Decls {
-	std::vector<std::unique_ptr<Var>> vars;
-	std::vector<std::unique_ptr<Procedure>> procedures;
+struct Decls : public Node {
+	typedef std::unique_ptr<Var> VarPtr;
+	typedef std::unique_ptr<Procedure> ProcedurePtr;
 
-	inline Decls()
-		: vars(), procedures()
-	{
-	}
+	typedef std::vector<VarPtr> VarVect;
+	typedef std::vector<ProcedurePtr> ProcedureVect;
+
+	VarVect        vars;
+	ProcedureVect  procedures;
+
+	Decls();
+	~Decls();
 };
 
 } // namespace frontend

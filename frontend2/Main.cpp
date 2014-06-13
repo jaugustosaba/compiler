@@ -19,8 +19,6 @@ module x;
   begin
   end p;
 
-  procedure x(a, b : integer) : integer;
-
   procedure add(a, b : integer) : integer;
   begin
     return x(a, b);
