@@ -11,7 +11,7 @@ namespace frontend {
 
 struct Expr;
 
-struct Call : public Node {
+struct Call {
 	typedef std::unique_ptr<Expr> ExprPtr;
 	typedef std::vector<ExprPtr> ExprVect;
 

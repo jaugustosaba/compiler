@@ -1,11 +1,11 @@
 #ifndef PROCEDURE_H_
 #define PROCEDURE_H_
 
-#include "Node.h"
 #include "Ident.h"
 #include "Decls.h"
 #include "FParam.h"
 #include "StmtList.h"
+#include "Node.h"
 
 namespace frontend {
 

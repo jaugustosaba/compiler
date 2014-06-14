@@ -1,14 +1,11 @@
 #ifndef IDENT_H_
 #define IDENT_H_
 
-#include "Node.h"
+#include "Text.h"
 
 namespace frontend {
 
-struct Ident : public Node {
-	Position     from;
-	Position     to;
-	std::string  text;
+struct Ident : public Text {
 };
 
 } // namespace frontend

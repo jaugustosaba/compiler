@@ -2,10 +2,11 @@
 #define INTEXPR_H_
 
 #include "Expr.h"
+#include "Text.h"
 
 namespace frontend {
 
-struct IntExpr : public Expr {
+struct IntExpr : public Text, public Expr {
 
 };
 

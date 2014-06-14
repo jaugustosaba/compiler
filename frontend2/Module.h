@@ -7,7 +7,7 @@
 
 namespace frontend {
 
-struct Module {
+struct Module : public Node {
 	Ident     id;
 	Decls     decls;
 	StmtList  stmts;

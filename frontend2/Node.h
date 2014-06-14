@@ -11,6 +11,8 @@ struct Node {
 
 	virtual ~Node() {
 	}
+protected:
+	Node() = default;
 };
 
 } // namespace frontend
