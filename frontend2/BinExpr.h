@@ -23,12 +23,12 @@ enum class BinOp {
 };
 
 struct BinExpr : public Expr {
-	typedef std::unique_ptr<BinExpr> BinExprPtr;
-
 	BinOp   op;
 	ExprPtr left;
 	ExprPtr right;
 };
+
+typedef std::unique_ptr<BinExpr> BinExprPtr;
 
 } // namespace frontend
 

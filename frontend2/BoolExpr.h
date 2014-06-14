@@ -6,8 +6,9 @@
 namespace frontend {
 
 struct BoolExpr : public Expr {
-	typedef std::unique_ptr<BoolExpr> BoolExprPtr;
 };
+
+typedef std::unique_ptr<BoolExpr> BoolExprPtr;
 
 } // namespace frontend
 

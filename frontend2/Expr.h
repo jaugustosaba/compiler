@@ -8,8 +8,9 @@
 namespace frontend {
 
 struct Expr : public Node {
-	typedef std::unique_ptr<Expr> ExprPtr;
 };
+
+typedef std::unique_ptr<Expr> ExprPtr;
 
 } // namespace frontend
 

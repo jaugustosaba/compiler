@@ -6,10 +6,10 @@
 namespace frontend {
 
 struct IntExpr : public Expr {
-	typedef std::unique_ptr<IntExpr> IntExprPtr;
-
 
 };
+
+typedef std::unique_ptr<IntExpr> IntExprPtr;
 
 } // namespace frontend
 

@@ -7,6 +7,9 @@
 #include "FParam.h"
 #include "BinExpr.h"
 #include "UnExpr.h"
+#include "IdDesignator.h"
+#include "CallExpr.h"
+#include "CallStmt.h"
 
 namespace frontend {
 
@@ -44,11 +47,14 @@ public:
 		consume(TokenType::Dot);
 		return module;
 	}
+private:
+
 	void parseIdent(Ident &ident) {
 		if (m_lexer.peek() != TokenType::Id) {
 			syntaxError({TokenType::Id});
 		}
 		ident.from = m_lexer.from();
+		m_lexer.next();
 		ident.to = m_lexer.to();
 		ident.text = m_lexer.lexeme();
 	}
@@ -139,7 +145,7 @@ public:
 	}
 	void parseStmts() {
 		while (m_lexer.peek() != TokenType::End) {
-			parseStmts();
+			parseStmt();
 			consume(TokenType::Semi);
 		}
 	}
@@ -193,30 +199,34 @@ public:
 			parseExpr();
 		}
 	}
-	void parseDesignator() {
-		consume(TokenType::Id);
+	DesignatorPtr parseDesignator() {
+		IdDesignatorPtr idDesig(new IdDesignator{});
+		parseIdent(idDesig->ident);
+		return std::move(idDesig);
 	}
 	void parseAssign() {
 		m_lexer.next();
 		parseExpr();
 	}
-	void parseCall() {
-		parseAParams();
+	StmtPtr parseCall() {
+		CallStmtPtr callStmt(new CallStmt{});
+		parseAParams(*callStmt);
+		return std::move(callStmt);
 	}
-	void parseAParams() {
+	void parseAParams(Call &call) {
 		if (m_lexer.peek() == TokenType::LParen) {
 			m_lexer.next();
 			if (m_lexer.peek() != TokenType::RParen) {
-				parseExpr();
+				call.aparams.push_back(parseExpr());
 				while (m_lexer.peek() == TokenType::Comma) {
 					m_lexer.next();
-					parseExpr();
+					call.aparams.push_back(parseExpr());
 				}
 			}
 			m_lexer.next();
 		}
 	}
-	Expr::ExprPtr parseExpr() {
+	ExprPtr parseExpr() {
 		auto expr = parseAddExpr();
 		BinOp op;
 		bool flag = true;
@@ -245,7 +255,7 @@ public:
 		}
 		if (flag) {
 			m_lexer.next();
-			BinExpr::BinExprPtr binexpr(new BinExpr());
+			BinExprPtr binexpr(new BinExpr());
 			binexpr->op = op;
 			binexpr->left = std::move(expr);
 			binexpr->right = parseAddExpr();
@@ -253,7 +263,7 @@ public:
 		}
 		return expr;
 	}
-	Expr::ExprPtr parseAddExpr() {
+	ExprPtr parseAddExpr() {
 		auto expr = parseMulExpr();
 		bool flag = true;
 		while (flag) {
@@ -274,7 +284,7 @@ public:
 			}
 			if (flag) {
 				m_lexer.next();
-				BinExpr::BinExprPtr binexpr(new BinExpr());
+				BinExprPtr binexpr(new BinExpr());
 				binexpr->op = op;
 				binexpr->left = std::move(expr);
 				binexpr->right = parseMulExpr();
@@ -283,7 +293,7 @@ public:
 		}
 		return expr;
 	}
-	Expr::ExprPtr parseMulExpr() {
+	ExprPtr parseMulExpr() {
 		auto expr = parseSingleExpr();
 		bool flag = true;
 		while (flag) {
@@ -310,7 +320,7 @@ public:
 			}
 			if (flag) {
 				m_lexer.next();
-				BinExpr::BinExprPtr binexpr(new BinExpr());
+				BinExprPtr binexpr(new BinExpr());
 				binexpr->op = op;
 				binexpr->left = std::move(expr);
 				binexpr->right = parseSingleExpr();
@@ -320,21 +330,19 @@ public:
 		return expr;
 	}
 	inline
-	Expr::ExprPtr makeUnExpr(UnOp op, Expr::ExprPtr &&expr) {
-		UnExpr::UnExprPtr unexpr(new UnExpr());
+	ExprPtr makeUnExpr(UnOp op, ExprPtr &&expr) {
+		UnExprPtr unexpr(new UnExpr());
 		unexpr->op = op;
 		unexpr->expr = std::move(expr);
 		return std::move(unexpr);
 	}
-	Expr::ExprPtr parseSingleExpr() {
-		Expr::ExprPtr expr;
+	ExprPtr parseSingleExpr() {
+		ExprPtr expr;
 		switch (m_lexer.peek()) {
 		case TokenType::Not:
-		{
 			m_lexer.next();
 			expr = makeUnExpr(UnOp::Not, parseSingleExpr());
 			break;
-		}
 		case TokenType::Add:
 			m_lexer.next();
 			expr = parseSingleExpr();
@@ -356,8 +364,11 @@ public:
 			m_lexer.next();
 			break;
 		default:
-			parseDesignator();
-			parseAParams();
+		{
+			CallExprPtr callExpr(new CallExpr{});
+			callExpr->designator = parseDesignator();
+			parseAParams(*callExpr);
+		}
 		}
 		return expr;
 	}

@@ -11,11 +11,11 @@ enum class UnOp {
 };
 
 struct UnExpr : public Expr {
-	typedef std::unique_ptr<UnExpr> UnExprPtr;
-
 	UnOp    op;
 	ExprPtr expr;
 };
+
+typedef std::unique_ptr<UnExpr> UnExprPtr;
 
 } // namespace frontend
 
