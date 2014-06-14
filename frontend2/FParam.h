@@ -9,6 +9,8 @@ struct FParam : public Var {
 	bool isVar;
 };
 
+typedef std::unique_ptr<FParam> FParamPtr;
+
 } // namespace frontend
 
 #endif /* FPARAM_H_ */

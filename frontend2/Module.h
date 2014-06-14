@@ -3,18 +3,17 @@
 
 #include "Decls.h"
 #include "Ident.h"
+#include "StmtList.h"
 
 namespace frontend {
 
 struct Module {
-	Ident id;
-	Decls decls;
-
-	inline Module()
-		: id(), decls()
-	{
-	}
+	Ident     id;
+	Decls     decls;
+	StmtList  stmts;
 };
+
+typedef std::unique_ptr<Module> ModulePtr;
 
 } // namespace frontend
 

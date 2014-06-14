@@ -10,6 +10,10 @@
 #include "IdDesignator.h"
 #include "CallExpr.h"
 #include "CallStmt.h"
+#include "AssignStmt.h"
+#include "IfStmt.h"
+#include "WhileStmt.h"
+#include "ReturnStmt.h"
 
 namespace frontend {
 
@@ -36,7 +40,7 @@ public:
 		parseDecls(module->decls);
 		if (m_lexer.peek() == TokenType::Begin) {
 			m_lexer.next();
-			parseStmts();
+			parseStmts(module->stmts);
 		}
 		consume(TokenType::End);
 		Ident id;
@@ -116,7 +120,7 @@ private:
 		consume(TokenType::Semi);
 		parseDecls(procedure->decls);
 		consume(TokenType::Begin);
-		parseStmts();
+		parseStmts(procedure->stmts);
 		consume(TokenType::End);
 		consume(TokenType::Id);
 		consume(TokenType::Semi);
@@ -131,7 +135,7 @@ private:
 		}
 	}
 	void parseFParam(Procedure::FParamVect &fparams) {
-		std::unique_ptr<FParam> fparam(new FParam{});
+		FParamPtr fparam(new FParam{});
 		fparam->from = m_lexer.from();
 		if (m_lexer.peek() == TokenType::Var) {
 			m_lexer.next();
@@ -143,73 +147,81 @@ private:
 		fparam->to = m_lexer.to();
 		fparams.push_back(std::move(fparam));
 	}
-	void parseStmts() {
+	void parseStmts(StmtList &stmts) {
 		while (m_lexer.peek() != TokenType::End) {
-			parseStmt();
+			stmts.stmts.push_back(parseStmt());
 			consume(TokenType::Semi);
 		}
 	}
-	void parseStmt() {
+	StmtPtr parseStmt() {
 		switch (m_lexer.peek()) {
 		case TokenType::If:
-			parseIf();
-			break;
+			return parseIf();
 		case TokenType::While:
-			parseWhile();
-			break;
+			return parseWhile();
 		case TokenType::Return:
-			parseReturn();
-			break;
+			return parseReturn();
 		default:
-			parseDesignator();
+			auto desig = parseDesignator();
 			if (m_lexer.peek() == TokenType::Assign) {
-				parseAssign();
-			} else {
-				parseCall();
+				return parseAssign(std::move(desig));
 			}
+			return parseCall(std::move(desig));
 		}
 	}
-	void parseIf() {
+	IfStmtPtr parseIf() {
+		IfStmtPtr ifStmt(new IfStmt());
 		m_lexer.next();
-		parseExpr();
+		ifStmt->condition = parseExpr();
 		consume(TokenType::Then);
-		parseStmts();
+		parseStmts(ifStmt->stmts);
 		while (m_lexer.peek() == TokenType::Elseif) {
+			ElseifPtr elseif(new Elseif());
 			m_lexer.next();
-			parseExpr();
+			elseif->condition = parseExpr();
 			consume(TokenType::Then);
-			parseStmts();
+			parseStmts(elseif->stmts);
+			ifStmt->elseifs.push_back(std::move(elseif));
 		}
 		if (m_lexer.peek() == TokenType::Else) {
 			m_lexer.next();
-			parseStmts();
+			parseStmts(ifStmt->elseStmts);
 		}
 		consume(TokenType::End);
+		return std::move(ifStmt);
 	}
-	void parseWhile() {
+	WhileStmtPtr parseWhile() {
+		WhileStmtPtr whileStmt(new WhileStmt());
 		m_lexer.next();
-		parseExpr();
+		whileStmt->condition = parseExpr();
 		consume(TokenType::Do);
-		parseStmts();
+		parseStmts(whileStmt->stmts);
 		consume(TokenType::End);
+		return std::move(whileStmt);
 	}
-	void parseReturn() {
+	ReturnStmtPtr parseReturn() {
+		ReturnStmtPtr returnStmt(new ReturnStmt());
 		m_lexer.next();
 		if (m_lexer.peek() != TokenType::Semi) {
-			parseExpr();
+			returnStmt->expr = parseExpr();
 		}
+		return std::move(returnStmt);
 	}
 	DesignatorPtr parseDesignator() {
 		IdDesignatorPtr idDesig(new IdDesignator{});
 		parseIdent(idDesig->ident);
 		return std::move(idDesig);
 	}
-	void parseAssign() {
+	AssignStmtPtr parseAssign(DesignatorPtr &&designator) {
+		AssignStmtPtr assignStmt(new AssignStmt());
 		m_lexer.next();
-		parseExpr();
+		assignStmt->designator = std::move(designator);
+		assignStmt->expr = parseExpr();
+		return std::move(assignStmt);
 	}
-	StmtPtr parseCall() {
+	CallStmtPtr parseCall(DesignatorPtr &&designator) {
 		CallStmtPtr callStmt(new CallStmt{});
+		callStmt->designator = std::move(designator);
 		parseAParams(*callStmt);
 		return std::move(callStmt);
 	}
@@ -384,7 +396,7 @@ private:
 	}
 };
 
-Parser::ModulePtr Parser::parse() {
+ModulePtr Parser::parse() {
 	m_lexer.next();
 	Helper helper(m_lexer);
 	return helper.parseModule();

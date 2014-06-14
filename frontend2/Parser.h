@@ -21,8 +21,6 @@ class Parser {
 
 	Lexer m_lexer;
 public:
-	typedef std::unique_ptr<Module> ModulePtr;
-
 	inline Parser(std::istream &input)
 		: m_lexer(input)
 	{

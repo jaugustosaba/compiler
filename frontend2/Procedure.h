@@ -4,21 +4,18 @@
 #include "Node.h"
 #include "Ident.h"
 #include "Decls.h"
+#include "FParam.h"
+#include "StmtList.h"
 
 namespace frontend {
 
-struct FParam;
-
 struct Procedure : public Node {
-	typedef std::unique_ptr<FParam> FParamPtr;
 	typedef std::vector<FParamPtr> FParamVect;
 
 	Ident       id;
 	FParamVect  fparams;
 	Decls       decls;
-
-	Procedure();
-	~Procedure();
+	StmtList    stmts;
 };
 
 } // namespace frontend
