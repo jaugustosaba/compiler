@@ -263,13 +263,13 @@ private:
 		}
 	}
 	inline
-	ExprPtr makeBinExpr(BinOp op, ExprPtr &&expr) {
+	ExprPtr makeBinExpr(BinOp op, ExprPtr &&left, ExprPtr &&right) {
 		BinExprPtr binexpr(new BinExpr());
-		binexpr->from = expr->from;
+		binexpr->from = left->from;
+		binexpr->to = right->to;
 		binexpr->op = op;
-		binexpr->left = std::move(expr);
-		binexpr->right = std::move(expr);
-		binexpr->to = binexpr->right->to;
+		binexpr->left = std::move(left);
+		binexpr->right = std::move(right);
 		return std::move(binexpr);
 	}
 	ExprPtr parseExpr() {
@@ -301,7 +301,7 @@ private:
 		}
 		if (flag) {
 			m_lexer.next();
-			expr = makeBinExpr(op, parseAddExpr());
+			expr = makeBinExpr(op, std::move(expr), parseAddExpr());
 		}
 		return expr;
 	}
@@ -326,7 +326,7 @@ private:
 			}
 			if (flag) {
 				m_lexer.next();
-				expr = makeBinExpr(op, parseMulExpr());
+				expr = makeBinExpr(op, std::move(expr), parseMulExpr());
 			}
 		}
 		return expr;
@@ -358,7 +358,7 @@ private:
 			}
 			if (flag) {
 				m_lexer.next();
-				expr = makeBinExpr(op, parseSingleExpr());
+				expr = makeBinExpr(op, std::move(expr), parseSingleExpr());
 			}
 		}
 		return expr;
@@ -383,6 +383,7 @@ private:
 		return std::move(intExpr);
 	}
 	ExprPtr parseSingleExpr() {
+		auto from = m_lexer.from();
 		ExprPtr expr;
 		switch (m_lexer.peek()) {
 		case TokenType::Not:
@@ -416,11 +417,14 @@ private:
 			break;
 		default:
 		{
-			CallExprPtr callExpr(new CallExpr{});
+			CallExprPtr callExpr(new CallExpr());
 			callExpr->designator = parseDesignator();
 			parseAParams(*callExpr);
+			expr = std::move(callExpr);
 		}
 		}
+		expr->from = from;
+		expr->to = m_lexer.from();
 		return expr;
 	}
 	void consume(TokenType tt) {
