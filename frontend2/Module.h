@@ -4,13 +4,15 @@
 #include "Decls.h"
 #include "Ident.h"
 #include "StmtList.h"
+#include "SymbolTable.h"
 
 namespace frontend {
 
 struct Module : public Node {
-	Ident     id;
-	Decls     decls;
-	StmtList  stmts;
+	Ident        id;
+	Decls        decls;
+	StmtList     stmts;
+	SymbolTable  st;
 };
 
 typedef std::unique_ptr<Module> ModulePtr;

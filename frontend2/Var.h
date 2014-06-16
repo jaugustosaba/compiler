@@ -2,10 +2,11 @@
 #define VAR_H_
 
 #include "IdentList.h"
+#include "Decl.h"
 
 namespace frontend {
 
-struct Var : public Node {
+struct Var : public Node, public Decl {
 	IdentList  identList;
 	Ident      typeName;
 };

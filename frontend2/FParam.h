@@ -1,6 +1,7 @@
 #ifndef FPARAM_H_
 #define FPARAM_H_
 
+#include "Decl.h"
 #include "Var.h"
 
 namespace frontend {
