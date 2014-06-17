@@ -9,16 +9,11 @@
 
 namespace frontend {
 
-struct Expr;
-
 struct Call {
-	typedef std::unique_ptr<Expr> ExprPtr;
 	typedef std::vector<ExprPtr> ExprVect;
 
 	DesignatorPtr  designator;
 	ExprVect       aparams;
-
-	~Call();
 };
 
 } // namespace frontend

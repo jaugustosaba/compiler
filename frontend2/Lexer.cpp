@@ -13,27 +13,25 @@ struct Keyword {
 };
 
 TokenType lookupKeyword(const std::string &id) {
-	const size_t KEYWORD_COUNT = 19;
+	const size_t KEYWORD_COUNT = 17;
 	const static Keyword KEYWORDS[KEYWORD_COUNT] = {
-		{"module", TokenType::Module},
-		{"if", TokenType::If},
-		{"then", TokenType::Then},
-		{"else", TokenType::Else},
-		{"elseif", TokenType::Elseif},
-		{"while", TokenType::While},
-		{"do", TokenType::Do},
-		{"end", TokenType::End},
-		{"var", TokenType::Var},
-		{"not", TokenType::Not},
-		{"or", TokenType::Or},
-		{"and", TokenType::And},
-		{"div", TokenType::Div},
-		{"mod", TokenType::Mod},
-		{"true", TokenType::True},
-		{"false", TokenType::False},
-		{"procedure", TokenType::Procedure},
-		{"return", TokenType::Return},
-		{"begin", TokenType::Begin}
+		{"MODULE", TokenType::Module},
+		{"IF", TokenType::If},
+		{"THEN", TokenType::Then},
+		{"ELSE", TokenType::Else},
+		{"ELSIF", TokenType::Elsif},
+		{"WHILE", TokenType::While},
+		{"DO", TokenType::Do},
+		{"END", TokenType::End},
+		{"VAR", TokenType::Var},
+		{"OR", TokenType::Or},
+		{"DIV", TokenType::Div},
+		{"MOD", TokenType::Mod},
+		{"TRUE", TokenType::True},
+		{"FALSE", TokenType::False},
+		{"PROCEDURE", TokenType::Procedure},
+		{"RETURN", TokenType::Return},
+		{"BEGIN", TokenType::Begin}
 	};
 	for (size_t i=0; i<KEYWORD_COUNT; ++i) {
 		const auto &KEYWORD = KEYWORDS[i];
@@ -95,13 +93,22 @@ void Lexer::next() {
 		m_tt = TokenType::Eq;
 		nextChar();
 		break;
+	case '#':
+		m_tt = TokenType::Ne;
+		nextChar();
+		break;
+	case '&':
+		m_tt = TokenType::And;
+		nextChar();
+		break;
+	case '~':
+		m_tt = TokenType::Not;
+		nextChar();
+		break;
 	case '<':
 		nextChar();
 		c = peekChar();
-		if (c == '>') {
-			nextChar();
-			m_tt = TokenType::Ne;
-		} else if (c == '=') {
+		if (c == '=') {
 			nextChar();
 			m_tt = TokenType::Le;
 		} else {

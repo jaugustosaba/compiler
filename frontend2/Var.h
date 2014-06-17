@@ -2,6 +2,7 @@
 #define VAR_H_
 
 #include "IdentList.h"
+#include "Ident.h"
 #include "Decl.h"
 
 namespace frontend {

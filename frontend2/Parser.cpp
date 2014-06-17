@@ -62,12 +62,12 @@ private:
 			syntaxError({TokenType::Id});
 		}
 		ident.from = m_lexer.from();
+		ident.value = m_lexer.lexeme();
 		m_lexer.next();
 		ident.to = m_lexer.to();
-		ident.value = m_lexer.lexeme();
 	}
-	IdentList::IdentPtr parseIdent() {
-		IdentList::IdentPtr ident(new Ident());
+	IdentPtr parseIdent() {
+		IdentPtr ident(new Ident());
 		parseIdent(*ident);
 		return std::move(ident);
 	}
@@ -184,7 +184,7 @@ private:
 		ifStmt->condition = parseExpr();
 		consume(TokenType::Then);
 		parseStmts(ifStmt->stmts);
-		while (m_lexer.peek() == TokenType::Elseif) {
+		while (m_lexer.peek() == TokenType::Elsif) {
 			ElseifPtr elseif(new Elseif());
 			m_lexer.next();
 			elseif->condition = parseExpr();
@@ -245,7 +245,7 @@ private:
 		CallStmtPtr callStmt(new CallStmt());
 		callStmt->from = designator->from;
 		callStmt->designator = std::move(designator);
-		callStmt->to = designator->to;
+		callStmt->to = callStmt->designator->to;
 		parseAParams(*callStmt);
 		return std::move(callStmt);
 	}

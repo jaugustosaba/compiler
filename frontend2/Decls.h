@@ -21,7 +21,6 @@ struct Decls : public Node {
 	VarVect        vars;
 	ProcedureVect  procedures;
 
-	Decls();
 	~Decls();
 };
 

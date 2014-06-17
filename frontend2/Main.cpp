@@ -2,42 +2,61 @@
 #include <sstream>
 
 #include "Parser.h"
+#include "TypeDecl.h"
+#include "ScalarType.h"
 
 const char *INPUT = R"(
-module x;
-  var
-    a, b, c : integer;
-    d, e, f : real;
+MODULE x;
+  VAR
+    a, b, c : INTEGER;
+    d, e, f : REAL;
 
-  procedure p;
-    var x : integer;
-    var y : real;
+  PROCEDURE p;
+    VAR x : INTEGER;
+        y : REAL;
+        z : BOOLEAN;
+    PROCEDURE q;
+    BEGIN
+    END q;
+  BEGIN
+    q;
+  END p;
 
-    procedure q;
-    begin
-    end q;
-  begin
-  end p;
+  PROCEDURE add(a, b : INTEGER) : INTEGER;
+  BEGIN
+    RETURN x(a, b);
+  END add;
 
-  procedure add(a, b : integer) : integer;
-  begin
-    return x(a, b);
-  end add;
-
-  procedure x(a, b : integer) : integer;
-    var res : real;
-  begin
+  PROCEDURE x(a, b : INTEGER) : INTEGER;
+    VAR res : REAL;
+  BEGIN
     res := a + b;
-    return res;
-  end x;
+    RETURN res;
+  END x;
 
-end x.
+END x.
 )";
+
+namespace frontend {
+
+void run(std::istream &input) {
+	Parser parser(input);
+	auto module = parser.parse();
+	ScalarType integer;
+	TypeDecl intdecl;
+	intdecl.type = &integer;
+	ScalarType boolean;
+	TypeDecl booldecl;
+	booldecl.type = &boolean;
+	SymbolTable st;
+	st.declare("integer", &intdecl);
+	st.declare("boolean", &booldecl);
+}
+
+} // namespace frontend
 
 int main() {
 	std::istringstream input(INPUT);
-	frontend::Parser parser(input);
-	parser.parse();
-
+	frontend::run(input);
 	return EXIT_SUCCESS;
 }

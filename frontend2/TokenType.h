@@ -30,7 +30,7 @@ enum class TokenType {
 	If,
 	Then,
 	Else,
-	Elseif,
+	Elsif,
 	While,
 	Do,
 	Not,
